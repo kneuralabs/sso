@@ -1524,11 +1524,19 @@ function doLogout() {
 }
 
 function doClose() {
-  stopCloseTimer();
+  if (_closeTimer) { clearInterval(_closeTimer); _closeTimer = null; }
+  _updateCloseCountdown(0);
   if (redirectUrl) {
     window.location.href = redirectUrl;
   } else {
     window.close();
+    // Fallback: browsers block window.close() for non-script-opened tabs
+    setTimeout(() => {
+      ['btn-close-dash', 'btn-close-admin'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) { btn.innerHTML = 'You may close this tab'; btn.disabled = true; }
+      });
+    }, 300);
   }
 }
 
