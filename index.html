@@ -77,6 +77,9 @@
   --t:200ms;
 }
 
+/* Dark mode body background also matches surface */
+[data-theme="dark"] body{background:var(--surface)}
+
 /* ── Dark mode tokens ── */
 [data-theme="dark"]{
   --bg:#050c18;
@@ -98,10 +101,17 @@
 }
 
 /* ── Base ── */
-html,body{
-  height:100%;
+html{
+  width:100%;
+  overflow-x:clip;
+}
+body{
+  width:100%;
+  min-height:100vh;
+  min-height:100svh;
+  overflow-x:clip;
   font-family:var(--font);
-  background:var(--bg);
+  background:var(--surface);   /* match right panel — hides any seam */
   color:var(--text);
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
@@ -110,17 +120,14 @@ button,a,input{touch-action:manipulation}
 input{-webkit-tap-highlight-color:transparent}
 *{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
-/* Smooth theme transitions — only on interactive elements, not on load */
-.theme-ready *{
-  transition:background-color var(--t) var(--ease-out),
-             border-color var(--t) var(--ease-out),
-             color var(--t) var(--ease-out),
-             box-shadow var(--t) var(--ease-out);
-}
-
 /* ── Layout ── */
-html,body{width:100%}
-.wrap{display:flex;width:100%;min-height:100vh;min-height:100svh}
+.wrap{
+  display:flex;
+  width:100vw;          /* vw instead of % — fills viewport regardless of scrollbar */
+  min-height:100vh;
+  min-height:100svh;
+  overflow-x:hidden;    /* prevent 100vw causing horizontal scroll */
+}
 
 /* ── Left branding panel ── */
 .left{
@@ -581,6 +588,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   .left{
     display:flex;           /* un-hide */
     width:100%;
+    max-width:100%;
     min-height:0;           /* cancel the 100svh base */
     height:220px;
     flex-shrink:0;
@@ -588,7 +596,6 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
     padding:1.25rem 1.5rem 1.375rem;
     flex-direction:column;
     justify-content:space-between;
-    /* SVG bg is position:absolute — it fills and animates inside the clipped box */
   }
 
   /* Hide long paragraph and footer badges in compact header */
@@ -603,6 +610,8 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   /* Right panel fills remaining screen height */
   .right{
     flex:1;
+    width:100%;
+    max-width:100%;
     min-height:0;
     padding:3rem 2rem 2.5rem;
   }
