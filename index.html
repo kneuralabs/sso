@@ -119,7 +119,8 @@ input{-webkit-tap-highlight-color:transparent}
 }
 
 /* ── Layout ── */
-.wrap{display:flex;min-height:100vh;min-height:100svh}
+html,body{width:100%}
+.wrap{display:flex;width:100%;min-height:100vh;min-height:100svh}
 
 /* ── Left branding panel ── */
 .left{
@@ -211,24 +212,22 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 /* ── Right form panel ── */
 .right{
   flex:1;
+  min-width:0;
   background:var(--surface);
   display:flex;
   flex-direction:column;
   align-items:center;
-  padding:3rem 2rem;
+  padding:4rem 2rem 3rem;
   position:relative;
   min-height:100vh;
   min-height:100svh;
-  /* Scroll-safe centering: spacers above/below push form to middle,
-     but overflow-y:auto lets content scroll when viewport is short */
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
 }
-.right::before,.right::after{content:'';flex:1;min-height:1.5rem}
 
 .top-link{
   position:absolute;
-  top:2rem;
+  top:1.5rem;
   right:2.5rem;
   font-size:.8125rem;
   color:var(--text-muted);
@@ -244,7 +243,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .top-link a:hover{text-decoration:underline;text-underline-offset:3px}
 
 /* ── Form wrap ── */
-.form-wrap{max-width:380px;width:100%}
+.form-wrap{max-width:380px;width:100%;margin:auto 0}
 
 .form-title{
   font-size:1.75rem;
@@ -529,33 +528,21 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 }
 .dot{color:#1f3d5e;font-size:.75rem}
 
-/* ══════════════════════════════════════════════
-   RESPONSIVE — full coverage
-   Breakpoint ladder (width):
-     ≥1920px  Ultrawide / 4K
-     ≥1440px  Large desktop
-     1280–1439 Standard desktop  (base styles)
-     1024–1279 Small laptop / wide tablet landscape
-      900–1023 Compact tablet landscape (iPad mini LS, Surface Go)
-      ≤899px  Tablet portrait + any narrow screen → hide left
-     ≤767px  Large mobile / small tablet (no left ever)
-     ≤479px  Medium-small mobile portrait
-     ≤359px  Very small (iPhone SE gen 1, budget Android)
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE — Full Device Coverage
+   Layout modes:
+     A. Two-column (left brand | right form) — desktop / laptop / tablet-LS
+     B. Stacked  (left header strip on top / right form below) — mobile & tablet-P
+     C. Single-column compact — phone landscape (short height)
+   ══════════════════════════════════════════════════════════ */
 
-   Orientation overrides:
-     any ≤1023 + portrait → hide left (covers all tablet portrait)
-     max-height:500 + landscape → phone landscape mode (scrollable)
-
-   Safe areas: bottom, left, right (notch / Dynamic Island)
-   ══════════════════════════════════════════════ */
-
-/* ── Ultrawide ≥1920px ── */
+/* ── A1. Ultrawide ≥1920px ──────────────────────────────── */
 @media(min-width:1920px){
   .wrap{max-width:1920px;margin:0 auto}
   .left{width:50%}
 }
 
-/* ── Large desktop ≥1440px ── */
+/* ── A2. Large desktop 1440-1919px ─────────────────────── */
 @media(min-width:1440px){
   .left{width:50%}
   .left-content h1{font-size:2.75rem}
@@ -563,79 +550,115 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   .form-wrap{max-width:420px}
 }
 
-/* ── Small laptop / wide tablet landscape: 1024–1279px ── */
+/* ── A3. Small laptop / wide tablet-LS 1024-1279px ─────── */
 @media(max-width:1279px){
   .left{width:46%}
 }
 
-/* ── Compact tablet landscape (900–1023px, landscape): ── */
-/*    iPad mini LS (1024×768), Surface Go LS             */
+/* ── A4. Compact tablet landscape 900-1023px ────────────── */
+/*    iPad mini LS (1024×768), Surface Go LS (1280×800 fits A3) */
 @media(max-width:1023px) and (min-width:900px) and (orientation:landscape){
   .left{width:42%;padding:1.75rem}
-  .left-content h1{font-size:clamp(1.375rem,2.8vw,1.75rem);margin-bottom:.875rem}
-  .left-content p{font-size:.8125rem;max-width:230px;line-height:1.55}
-  .shield-icon{width:32px;height:32px;margin-bottom:.75rem}
-  .left-eyebrow{margin-bottom:.75rem}
-  .left-footer{margin-top:.75rem}
-  .badges{gap:.35rem}
-  .badge{font-size:.5rem;padding:2px 6px}
+  .left-content h1{font-size:clamp(1.375rem,2.8vw,1.75rem);margin-bottom:.75rem}
+  .left-content p{font-size:.8125rem;max-width:220px;line-height:1.5}
+  .shield-icon{width:30px;height:30px;margin-bottom:.625rem}
+  .left-eyebrow{margin-bottom:.625rem}
+  .left-footer{margin-top:.5rem}
+  .badge{font-size:.5rem;padding:2px 5px}
+  .right{padding:3rem 1.75rem 2rem}
 }
 
-/* ── Also compress non-landscape 768–1023px that still show left ── */
-@media(max-width:1023px) and (min-width:821px) and (orientation:landscape){
-  .right{padding:2.5rem 1.75rem}
-}
+/* ── B. STACKED LAYOUT: mobile portrait + tablet portrait ── */
+/*    Triggers: width ≤899px  OR  ≤1023px + portrait orientation
+     Both conditions collapse to the same stacked treatment.    */
+@media(max-width:899px),
+      (max-width:1023px) and (orientation:portrait){
 
-/* ── Hide left panel: any width ≤899px ── */
-@media(max-width:899px){
-  .left{display:none}
-  .right{padding:2.5rem 2rem}
-  .top-link{right:2rem}
-}
+  /* Stack the two panels vertically */
+  .wrap{flex-direction:column}
 
-/* ── Hide left panel: tablet portrait (any tablet ≤1023px in portrait) ── */
-/*    Catches iPad mini P (768), iPad Air P (820), iPad Pro P (1024), Surface P (912) */
-@media(max-width:1023px) and (orientation:portrait){
-  .left{display:none}
-  .right{padding:2.5rem 2rem}
-  .top-link{right:2rem}
-}
-
-/* ── Phone landscape: short viewport (height ≤ 500px) ── */
-/*    Works for all phones rotated regardless of pixel-width  */
-@media(max-height:500px) and (orientation:landscape){
-  .left{display:none}
-  .right{
-    justify-content:flex-start; /* spacer trick not needed when scrolling */
-    padding-top:3.25rem;
-    padding-bottom:1.5rem;
+  /* Left becomes a compact animated hero header */
+  .left{
+    display:flex;           /* un-hide */
+    width:100%;
+    min-height:0;           /* cancel the 100svh base */
+    height:220px;
+    flex-shrink:0;
+    overflow:hidden;        /* clip the animated SVG to header height */
+    padding:1.25rem 1.5rem 1.375rem;
+    flex-direction:column;
+    justify-content:space-between;
+    /* SVG bg is position:absolute — it fills and animates inside the clipped box */
   }
-  .right::before,.right::after{display:none}
-  .form-wrap{max-width:480px;width:100%}
+
+  /* Hide long paragraph and footer badges in compact header */
+  .left-content p,.left-footer,.shield-icon{display:none}
+  .left-eyebrow{font-size:.5625rem;margin-bottom:.4rem}
+  .left-content h1{
+    font-size:clamp(1.2rem,4.5vw,1.625rem);
+    margin-bottom:0;
+    line-height:1.22;
+  }
+
+  /* Right panel fills remaining screen height */
+  .right{
+    flex:1;
+    min-height:0;
+    padding:3rem 2rem 2.5rem;
+  }
+  .top-link{right:2rem;top:1.5rem}
+  .form-wrap{max-width:420px}
+}
+
+/* ── B2. Larger tablets portrait (768-1023px) — taller header ── */
+@media(min-width:600px) and (max-width:1023px) and (orientation:portrait){
+  .left{height:260px;padding:1.75rem 2rem 1.875rem}
+  .left-content h1{font-size:clamp(1.375rem,3.5vw,1.875rem)}
+  .right{padding:3.5rem 2.5rem 3rem}
+  .form-wrap{max-width:440px}
+}
+
+/* ── B3. Wide mobile landscape (600-899px portrait equivalent) ── */
+@media(min-width:600px) and (max-width:899px) and (orientation:portrait){
+  .left{height:240px}
+}
+
+/* ── C. PHONE LANDSCAPE — single column, compact, scrollable ── */
+/*    Any device rotated where viewport height ≤ 500px         */
+@media(max-height:500px) and (orientation:landscape){
+  .wrap{flex-direction:row} /* restore two-column if stacked was set */
+  .left{display:none}       /* phone landscape: no room for header */
+  .right{
+    min-height:100svh;
+    padding:3rem 2rem 1.5rem;
+  }
+  .form-wrap{max-width:480px;margin:auto 0}
   .field{margin-bottom:.625rem}
-  .form-title{font-size:1.25rem;margin-bottom:.125rem}
+  .form-title{font-size:1.25rem;margin-bottom:.1rem}
   .form-sub{font-size:.8rem;margin-bottom:.875rem}
   .btn-primary,.btn-outline,.btn-key{height:40px;font-size:.875rem}
   .field input{height:40px;font-size:.875rem}
-  .top-link{top:1rem}
-  .divider{margin:.75rem 0}
+  .top-link{top:.875rem}
+  .divider{margin:.625rem 0}
 }
 
-/* ── Large mobile / small tablet portrait: ≤767px ── */
-@media(max-width:767px){
-  .right{padding:2rem 1.5rem}
-  .top-link{top:1.5rem;right:1.5rem;font-size:.8rem}
-  .form-title{font-size:1.625rem}
-  .form-sub{font-size:.875rem}
-}
-
-/* ── Medium-small mobile portrait: ≤479px ── */
-@media(max-width:479px){
-  .right{padding:1.5rem 1.25rem;padding-top:3.75rem}
-  .form-wrap{max-width:100%}
-  .top-link{font-size:.75rem;right:1.25rem;top:1.25rem}
+/* ── Mobile ≤599px (all small phones, portrait) ───────────── */
+@media(max-width:599px){
+  .left{height:200px;padding:1.125rem 1.25rem 1.25rem}
+  .left-content h1{font-size:clamp(1.1rem,5vw,1.375rem)}
+  .right{padding:2.75rem 1.5rem 2rem}
+  .top-link{right:1.5rem;top:1.25rem;font-size:.78rem}
   .form-title{font-size:1.5rem}
-  .form-sub{font-size:.875rem;margin-bottom:1.625rem}
+  .form-sub{font-size:.875rem;margin-bottom:1.75rem}
+}
+
+/* ── Small mobile ≤479px ─────────────────────────────────── */
+@media(max-width:479px){
+  .left{height:190px;padding:1rem 1.25rem 1.125rem}
+  .right{padding:2.5rem 1.25rem 1.75rem}
+  .form-wrap{max-width:100%}
+  .top-link{right:1.25rem;top:1rem;font-size:.75rem}
+  .form-title{font-size:1.4375rem}
   .key-grid{grid-template-columns:1fr}
   .toast{left:1rem;right:1rem;max-width:none;bottom:1.25rem}
   .theme-btn{bottom:1rem;left:1rem;width:32px;height:32px}
@@ -644,43 +667,40 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   .user-row{font-size:.8rem}
 }
 
-/* ── Very small mobile: ≤359px (iPhone SE gen 1, budget Android) ── */
+/* ── Very small ≤359px (iPhone SE gen1, budget Android) ───── */
 @media(max-width:359px){
-  .right{padding-left:1rem;padding-right:1rem;padding-top:3.25rem}
+  .left{height:175px}
+  .right{padding:2.25rem 1rem 1.5rem}
   .field input,.btn-primary,.btn-outline{height:44px;font-size:.875rem}
   .btn-key{height:40px;font-size:.75rem}
-  .form-title{font-size:1.375rem}
-  .form-sub{font-size:.8125rem;margin-bottom:1.375rem}
-  .top-link{top:1rem;right:1rem;font-size:.6875rem}
+  .form-title{font-size:1.3125rem}
+  .form-sub{font-size:.8125rem;margin-bottom:1.25rem}
+  .top-link{top:.875rem;right:1rem;font-size:.6875rem}
   .key-grid{gap:.375rem}
-  .theme-btn{width:30px;height:30px}
+  .theme-btn{width:30px;height:30px;left:.875rem}
   .theme-btn svg{width:12px;height:12px}
 }
 
-/* ── Safe-area insets: notch, Dynamic Island, home indicator ── */
+/* ── Safe-area insets (notch / Dynamic Island / home bar) ─── */
 @supports(padding:env(safe-area-inset-bottom)){
-  /* Right panel: respect side notch in landscape */
   .right{
-    padding-left:max(2rem, env(safe-area-inset-left));
-    padding-right:max(2rem, env(safe-area-inset-right));
+    padding-left:max(2rem,env(safe-area-inset-left));
+    padding-right:max(2rem,env(safe-area-inset-right));
   }
-  /* Floating elements above home indicator */
   .theme-btn{bottom:calc(1rem + env(safe-area-inset-bottom))}
   .toast{bottom:calc(1.5rem + env(safe-area-inset-bottom))}
-  /* Mobile portrait: tighter */
   @media(max-width:479px){
     .right{
-      padding-left:max(1.25rem, env(safe-area-inset-left));
-      padding-right:max(1.25rem, env(safe-area-inset-right));
+      padding-left:max(1.25rem,env(safe-area-inset-left));
+      padding-right:max(1.25rem,env(safe-area-inset-right));
     }
     .theme-btn{bottom:calc(.75rem + env(safe-area-inset-bottom))}
     .toast{bottom:calc(1rem + env(safe-area-inset-bottom))}
   }
-  /* Phone landscape: side notch covers input area */
   @media(max-height:500px) and (orientation:landscape){
     .right{
-      padding-left:max(1.5rem, env(safe-area-inset-left));
-      padding-right:max(1.5rem, env(safe-area-inset-right));
+      padding-left:max(1.5rem,env(safe-area-inset-left));
+      padding-right:max(1.5rem,env(safe-area-inset-right));
     }
   }
 }
