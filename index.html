@@ -869,7 +869,8 @@ function validID(v) {
 }
 
 function checkID() {
-  const v = document.getElementById('emp-id').value.trim().toUpperCase();
+  const raw = document.getElementById('emp-id').value.trim();
+  const v = raw.toLowerCase() === 'admin' ? 'admin' : raw.toUpperCase();
   if (!validID(v)) {
     document.getElementById('err-id').classList.add('show');
     document.getElementById('emp-id').classList.add('err');
