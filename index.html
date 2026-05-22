@@ -1074,7 +1074,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
         </div>
 
         <button class="btn-primary" id="btn-update-db" style="margin-top:1.25rem" onclick="manualSave()">Update database to perform the functions</button>
-        <button class="btn-outline" id="btn-close-admin" style="margin-top:.625rem" onclick="doClose()">Close <span id="close-countdown-admin">(5)</span></button>
+        <button class="btn-outline" id="btn-close-admin" style="margin-top:.625rem" onclick="doClose()">Close</button>
       </div>
 
       <!-- SCREEN: Dashboard (logged in) -->
@@ -1089,7 +1089,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
           <span>Last login: just now</span>
         </div>
         <button class="btn-outline" style="margin-bottom:.5rem" onclick="showScreen('s-change-self')">Change password</button>
-        <button class="btn-primary" id="btn-close-dash" onclick="doClose()">Close <span id="close-countdown-dash">(5)</span></button>
+        <button class="btn-primary" id="btn-close-dash" onclick="doClose()">Close</button>
       </div>
 
       <!-- SCREEN: Change own password (logged in) -->
@@ -1199,8 +1199,10 @@ let ghFileSHA  = '';
 
 const _params      = new URLSearchParams(window.location.search);
 const redirectUrl  = _params.get('redirect') || _params.get('next') || _params.get('returnUrl') || _params.get('continue') || '';
-let   _closeTimer  = null;
 let   _redirectWin = null;
+
+const _ssoChannel = new BroadcastChannel('kn-sso-close');
+_ssoChannel.onmessage = () => _closeThisTab();
 
 /* ── Encryption helpers (AES-GCM / PBKDF2) ── */
 const ENC_MAGIC = new Uint8Array([0x4B,0x4E,0x44,0x42,0x31]); // "KNDB1"
@@ -1335,11 +1337,6 @@ function showScreen(id) {
   const el = document.getElementById(id);
   if (el) el.classList.add('active');
   clearErrors();
-  if (id === 's-dash' || id === 's-admin') {
-    startCloseTimer();
-  } else {
-    stopCloseTimer();
-  }
 }
 
 function clearErrors() {
@@ -1527,47 +1524,25 @@ function doLogout() {
 }
 
 function doClose() {
-  if (_closeTimer) { clearInterval(_closeTimer); _closeTimer = null; }
-  _updateCloseCountdown(0);
+  _ssoChannel.postMessage('close');
+  _closeThisTab();
+}
+
+function _closeThisTab() {
   window.close();
   setTimeout(() => {
     if (window.closed) return;
-    // First fallback: navigate to blank
     window.location.replace('about:blank');
-    // Second fallback: make button clickable to blank the page manually
     setTimeout(() => {
       ['btn-close-dash', 'btn-close-admin'].forEach(id => {
         const btn = document.getElementById(id);
         if (!btn) return;
-        btn.innerHTML = 'You may close this tab';
+        btn.textContent = 'You may close this tab';
         btn.disabled = false;
         btn.onclick = () => window.location.replace('about:blank');
       });
     }, 300);
   }, 300);
-}
-
-function startCloseTimer() {
-  stopCloseTimer();
-  let count = 5;
-  _updateCloseCountdown(count);
-  _closeTimer = setInterval(() => {
-    count--;
-    _updateCloseCountdown(count);
-    if (count <= 0) doClose();
-  }, 1000);
-}
-
-function stopCloseTimer() {
-  if (_closeTimer) { clearInterval(_closeTimer); _closeTimer = null; }
-  _updateCloseCountdown(5);
-}
-
-function _updateCloseCountdown(n) {
-  ['close-countdown-admin', 'close-countdown-dash'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = '(' + n + ')';
-  });
 }
 
 /* ── Utilities ── */
