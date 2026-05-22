@@ -106,6 +106,9 @@ html,body{
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
 }
+button,a,input{touch-action:manipulation}
+input{-webkit-tap-highlight-color:transparent}
+*{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 /* Smooth theme transitions — only on interactive elements, not on load */
 .theme-ready *{
@@ -127,7 +130,7 @@ html,body{
   justify-content:space-between;
   padding:2.5rem;
   position:relative;
-  overflow:hidden;
+  overflow-y:auto;
   min-height:100vh;
   min-height:100svh;
 }
@@ -211,13 +214,17 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   background:var(--surface);
   display:flex;
   flex-direction:column;
-  justify-content:center;
   align-items:center;
   padding:3rem 2rem;
   position:relative;
   min-height:100vh;
   min-height:100svh;
+  /* Scroll-safe centering: spacers above/below push form to middle,
+     but overflow-y:auto lets content scroll when viewport is short */
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
 }
+.right::before,.right::after{content:'';flex:1;min-height:1.5rem}
 
 .top-link{
   position:absolute;
@@ -226,6 +233,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   font-size:.8125rem;
   color:var(--text-muted);
   font-weight:400;
+  z-index:10;
 }
 .top-link a{
   color:var(--accent);
@@ -521,55 +529,160 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 }
 .dot{color:#1f3d5e;font-size:.75rem}
 
-/* ── Responsive ── */
+/* ══════════════════════════════════════════════
+   RESPONSIVE — full coverage
+   Breakpoint ladder (width):
+     ≥1920px  Ultrawide / 4K
+     ≥1440px  Large desktop
+     1280–1439 Standard desktop  (base styles)
+     1024–1279 Small laptop / wide tablet landscape
+      900–1023 Compact tablet landscape (iPad mini LS, Surface Go)
+      ≤899px  Tablet portrait + any narrow screen → hide left
+     ≤767px  Large mobile / small tablet (no left ever)
+     ≤479px  Medium-small mobile portrait
+     ≤359px  Very small (iPhone SE gen 1, budget Android)
 
-/* Tablet landscape (1024–1279px) */
+   Orientation overrides:
+     any ≤1023 + portrait → hide left (covers all tablet portrait)
+     max-height:500 + landscape → phone landscape mode (scrollable)
+
+   Safe areas: bottom, left, right (notch / Dynamic Island)
+   ══════════════════════════════════════════════ */
+
+/* ── Ultrawide ≥1920px ── */
+@media(min-width:1920px){
+  .wrap{max-width:1920px;margin:0 auto}
+  .left{width:50%}
+}
+
+/* ── Large desktop ≥1440px ── */
+@media(min-width:1440px){
+  .left{width:50%}
+  .left-content h1{font-size:2.75rem}
+  .left-content p{max-width:320px}
+  .form-wrap{max-width:420px}
+}
+
+/* ── Small laptop / wide tablet landscape: 1024–1279px ── */
 @media(max-width:1279px){
   .left{width:46%}
 }
 
-/* Tablet portrait (768–1023px) */
-@media(max-width:1023px){
-  .left{width:44%;padding:2rem}
-  .left-content h1{font-size:clamp(1.5rem,3.2vw,2rem)}
-  .left-content p{max-width:260px}
+/* ── Compact tablet landscape (900–1023px, landscape): ── */
+/*    iPad mini LS (1024×768), Surface Go LS             */
+@media(max-width:1023px) and (min-width:900px) and (orientation:landscape){
+  .left{width:42%;padding:1.75rem}
+  .left-content h1{font-size:clamp(1.375rem,2.8vw,1.75rem);margin-bottom:.875rem}
+  .left-content p{font-size:.8125rem;max-width:230px;line-height:1.55}
+  .shield-icon{width:32px;height:32px;margin-bottom:.75rem}
+  .left-eyebrow{margin-bottom:.75rem}
+  .left-footer{margin-top:.75rem}
+  .badges{gap:.35rem}
+  .badge{font-size:.5rem;padding:2px 6px}
 }
 
-/* Hide left panel on small tablet & mobile (≤820px) */
-@media(max-width:820px){
+/* ── Also compress non-landscape 768–1023px that still show left ── */
+@media(max-width:1023px) and (min-width:821px) and (orientation:landscape){
+  .right{padding:2.5rem 1.75rem}
+}
+
+/* ── Hide left panel: any width ≤899px ── */
+@media(max-width:899px){
   .left{display:none}
-  .right{padding:2rem 1.75rem;min-height:100vh;min-height:100svh}
-  .top-link{right:1.75rem}
+  .right{padding:2.5rem 2rem}
+  .top-link{right:2rem}
 }
 
-/* Mobile landscape */
-@media(max-width:767px) and (orientation:landscape){
-  .right{justify-content:flex-start;padding-top:4rem;padding-bottom:2rem}
-  .form-wrap{max-width:400px}
+/* ── Hide left panel: tablet portrait (any tablet ≤1023px in portrait) ── */
+/*    Catches iPad mini P (768), iPad Air P (820), iPad Pro P (1024), Surface P (912) */
+@media(max-width:1023px) and (orientation:portrait){
+  .left{display:none}
+  .right{padding:2.5rem 2rem}
+  .top-link{right:2rem}
 }
 
-/* Mobile portrait (≤479px) */
+/* ── Phone landscape: short viewport (height ≤ 500px) ── */
+/*    Works for all phones rotated regardless of pixel-width  */
+@media(max-height:500px) and (orientation:landscape){
+  .left{display:none}
+  .right{
+    justify-content:flex-start; /* spacer trick not needed when scrolling */
+    padding-top:3.25rem;
+    padding-bottom:1.5rem;
+  }
+  .right::before,.right::after{display:none}
+  .form-wrap{max-width:480px;width:100%}
+  .field{margin-bottom:.625rem}
+  .form-title{font-size:1.25rem;margin-bottom:.125rem}
+  .form-sub{font-size:.8rem;margin-bottom:.875rem}
+  .btn-primary,.btn-outline,.btn-key{height:40px;font-size:.875rem}
+  .field input{height:40px;font-size:.875rem}
+  .top-link{top:1rem}
+  .divider{margin:.75rem 0}
+}
+
+/* ── Large mobile / small tablet portrait: ≤767px ── */
+@media(max-width:767px){
+  .right{padding:2rem 1.5rem}
+  .top-link{top:1.5rem;right:1.5rem;font-size:.8rem}
+  .form-title{font-size:1.625rem}
+  .form-sub{font-size:.875rem}
+}
+
+/* ── Medium-small mobile portrait: ≤479px ── */
 @media(max-width:479px){
-  .right{padding:1.5rem 1.25rem;padding-top:3.5rem}
+  .right{padding:1.5rem 1.25rem;padding-top:3.75rem}
   .form-wrap{max-width:100%}
-  .top-link{font-size:.75rem;right:1.25rem;top:1.125rem}
+  .top-link{font-size:.75rem;right:1.25rem;top:1.25rem}
   .form-title{font-size:1.5rem}
+  .form-sub{font-size:.875rem;margin-bottom:1.625rem}
   .key-grid{grid-template-columns:1fr}
-  .toast{left:1rem;right:1rem;max-width:none}
+  .toast{left:1rem;right:1rem;max-width:none;bottom:1.25rem}
   .theme-btn{bottom:1rem;left:1rem;width:32px;height:32px}
   .theme-btn svg{width:13px;height:13px}
+  .info-box{padding:.75rem}
+  .user-row{font-size:.8rem}
 }
 
-/* Very small screens (≤359px) */
+/* ── Very small mobile: ≤359px (iPhone SE gen 1, budget Android) ── */
 @media(max-width:359px){
+  .right{padding-left:1rem;padding-right:1rem;padding-top:3.25rem}
   .field input,.btn-primary,.btn-outline{height:44px;font-size:.875rem}
-  .right{padding-left:1rem;padding-right:1rem}
+  .btn-key{height:40px;font-size:.75rem}
+  .form-title{font-size:1.375rem}
+  .form-sub{font-size:.8125rem;margin-bottom:1.375rem}
+  .top-link{top:1rem;right:1rem;font-size:.6875rem}
+  .key-grid{gap:.375rem}
+  .theme-btn{width:30px;height:30px}
+  .theme-btn svg{width:12px;height:12px}
 }
 
-/* Safe area padding for notched phones */
+/* ── Safe-area insets: notch, Dynamic Island, home indicator ── */
 @supports(padding:env(safe-area-inset-bottom)){
+  /* Right panel: respect side notch in landscape */
+  .right{
+    padding-left:max(2rem, env(safe-area-inset-left));
+    padding-right:max(2rem, env(safe-area-inset-right));
+  }
+  /* Floating elements above home indicator */
   .theme-btn{bottom:calc(1rem + env(safe-area-inset-bottom))}
   .toast{bottom:calc(1.5rem + env(safe-area-inset-bottom))}
+  /* Mobile portrait: tighter */
+  @media(max-width:479px){
+    .right{
+      padding-left:max(1.25rem, env(safe-area-inset-left));
+      padding-right:max(1.25rem, env(safe-area-inset-right));
+    }
+    .theme-btn{bottom:calc(.75rem + env(safe-area-inset-bottom))}
+    .toast{bottom:calc(1rem + env(safe-area-inset-bottom))}
+  }
+  /* Phone landscape: side notch covers input area */
+  @media(max-height:500px) and (orientation:landscape){
+    .right{
+      padding-left:max(1.5rem, env(safe-area-inset-left));
+      padding-right:max(1.5rem, env(safe-area-inset-right));
+    }
+  }
 }
 </style>
 </head>
