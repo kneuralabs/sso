@@ -1530,8 +1530,21 @@ function doClose() {
   if (_closeTimer) { clearInterval(_closeTimer); _closeTimer = null; }
   _updateCloseCountdown(0);
   window.close();
-  // Fallback: if window.close() is blocked (tab not opened by script), blank the page
-  setTimeout(() => { if (!window.closed) window.location.replace('about:blank'); }, 300);
+  setTimeout(() => {
+    if (window.closed) return;
+    // First fallback: navigate to blank
+    window.location.replace('about:blank');
+    // Second fallback: make button clickable to blank the page manually
+    setTimeout(() => {
+      ['btn-close-dash', 'btn-close-admin'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.innerHTML = 'You may close this tab';
+        btn.disabled = false;
+        btn.onclick = () => window.location.replace('about:blank');
+      });
+    }, 300);
+  }, 300);
 }
 
 function startCloseTimer() {
