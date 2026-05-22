@@ -101,17 +101,9 @@
 }
 
 /* ── Base ── */
-html{
-  width:100%;
-  overflow-x:clip;
-}
-body{
-  width:100%;
-  min-height:100vh;
-  min-height:100svh;
-  overflow-x:clip;
+html,body{
   font-family:var(--font);
-  background:var(--surface);   /* match right panel — hides any seam */
+  background:var(--surface);
   color:var(--text);
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
@@ -122,11 +114,10 @@ input{-webkit-tap-highlight-color:transparent}
 
 /* ── Layout ── */
 .wrap{
+  position:fixed;   /* locked to viewport — zero gaps on any side, always */
+  inset:0;          /* top:0; right:0; bottom:0; left:0                   */
   display:flex;
-  width:100vw;          /* vw instead of % — fills viewport regardless of scrollbar */
-  min-height:100vh;
-  min-height:100svh;
-  overflow-x:hidden;    /* prevent 100vw causing horizontal scroll */
+  overflow:hidden;  /* panels scroll internally via overflow-y:auto       */
 }
 
 /* ── Left branding panel ── */
@@ -139,8 +130,7 @@ input{-webkit-tap-highlight-color:transparent}
   padding:2.5rem;
   position:relative;
   overflow-y:auto;
-  min-height:100vh;
-  min-height:100svh;
+  /* height comes from parent fixed wrap — no min-height needed */
 }
 .left::before{
   content:'';
@@ -226,9 +216,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   align-items:center;
   padding:4rem 2rem 3rem;
   position:relative;
-  min-height:100vh;
-  min-height:100svh;
-  overflow-y:auto;
+  overflow-y:auto;          /* scrolls within the fixed wrap */
   -webkit-overflow-scrolling:touch;
 }
 
@@ -586,10 +574,8 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 
   /* Left becomes a compact animated hero header */
   .left{
-    display:flex;           /* un-hide */
+    display:flex;
     width:100%;
-    max-width:100%;
-    min-height:0;           /* cancel the 100svh base */
     height:220px;
     flex-shrink:0;
     overflow:hidden;        /* clip the animated SVG to header height */
@@ -607,12 +593,10 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
     line-height:1.22;
   }
 
-  /* Right panel fills remaining screen height */
+  /* Right panel fills remaining height and scrolls */
   .right{
     flex:1;
     width:100%;
-    max-width:100%;
-    min-height:0;
     padding:3rem 2rem 2.5rem;
   }
   .top-link{right:2rem;top:1.5rem}
@@ -635,12 +619,9 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 /* ── C. PHONE LANDSCAPE — single column, compact, scrollable ── */
 /*    Any device rotated where viewport height ≤ 500px         */
 @media(max-height:500px) and (orientation:landscape){
-  .wrap{flex-direction:row} /* restore two-column if stacked was set */
-  .left{display:none}       /* phone landscape: no room for header */
-  .right{
-    min-height:100svh;
-    padding:3rem 2rem 1.5rem;
-  }
+  .wrap{flex-direction:row}
+  .left{display:none}
+  .right{padding:3rem 2rem 1.5rem}
   .form-wrap{max-width:480px;margin:auto 0}
   .field{margin-bottom:.625rem}
   .form-title{font-size:1.25rem;margin-bottom:.1rem}
