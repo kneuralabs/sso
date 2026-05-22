@@ -681,6 +681,16 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
         <div class="form-sub">Manage employee accounts</div>
 
         <div class="field">
+          <label for="gh-token-input">GitHub token</label>
+          <div class="pw-wrap">
+            <input type="password" id="gh-token-input" placeholder="Paste GitHub token (ghp_…)" autocomplete="off"
+              oninput="onTokenInput()">
+            <button class="pw-toggle" onclick="togglePw('gh-token-input',this)" type="button">Show</button>
+          </div>
+          <div id="db-status" style="font-size:.75rem;margin-top:.35rem;display:none"></div>
+        </div>
+
+        <div class="field">
           <label for="admin-new-id">Employee ID</label>
           <input type="text" id="admin-new-id" placeholder="KN-2026-001" maxlength="12" oninput="fmtEmpID(this)">
         </div>
@@ -800,10 +810,14 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 /* ── Config ── */
-const GITHUB_TOKEN = '';          // Fine-grained PAT: Contents read+write for kneuralabs/sso
-const GH_OWNER     = 'kneuralabs';
-const GH_REPO      = 'sso';
-const GH_FILE      = 'DATA.xlsx';
+const GH_OWNER = 'kneuralabs';
+const GH_REPO  = 'sso';
+const GH_FILE  = 'DATA.xlsx';
+
+function getToken() {
+  const el = document.getElementById('gh-token-input');
+  return (el ? el.value.trim() : '') || localStorage.getItem('kn-gh-token') || '';
+}
 
 /* ── Constants ── */
 const ADMIN_PW       = 'S1ogger$';
@@ -845,8 +859,9 @@ async function decryptBytes(data, password) {
 /* ── GitHub helpers ── */
 async function loadUsers() {
   try {
+    const token = getToken();
     const hdrs = { Accept: 'application/vnd.github+json' };
-    if (GITHUB_TOKEN) hdrs.Authorization = 'Bearer ' + GITHUB_TOKEN;
+    if (token) hdrs.Authorization = 'Bearer ' + token;
     const res = await fetch(
       `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
       { headers: hdrs }
@@ -869,13 +884,14 @@ async function loadUsers() {
 }
 
 async function saveUsers() {
-  if (!GITHUB_TOKEN) { showToast('Set GITHUB_TOKEN to persist changes.', 'err'); return false; }
+  const token = getToken();
+  if (!token) { showToast('Enter your GitHub token first.', 'err'); return false; }
   try {
     const rows = [['id', 'password', 'name'],
       ...Object.entries(users).map(([id, u]) => [id, u.password, u.name || id])];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Users');
-    const xlsxArr  = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
+    const xlsxArr   = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
     const encrypted = await encryptBytes(new Uint8Array(xlsxArr), ADMIN_PW);
     let binary = '';
     for (let i = 0; i < encrypted.length; i++) binary += String.fromCharCode(encrypted[i]);
@@ -885,7 +901,7 @@ async function saveUsers() {
     const res = await fetch(
       `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
       { method: 'PUT',
-        headers: { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + GITHUB_TOKEN, 'Content-Type': 'application/json' },
+        headers: { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
         body: JSON.stringify(body) }
     );
     if (res.ok) { const j = await res.json(); ghFileSHA = j.content.sha; return true; }
@@ -893,14 +909,28 @@ async function saveUsers() {
   } catch(e) { showToast('Save failed.', 'err'); console.error(e); return false; }
 }
 
+function onTokenInput() {
+  const status = document.getElementById('db-status');
+  status.style.display = 'none';
+}
+
 async function manualSave() {
-  const btn = document.getElementById('btn-update-db');
+  const btn    = document.getElementById('btn-update-db');
+  const tinput = document.getElementById('gh-token-input');
+  const status = document.getElementById('db-status');
   btn.disabled = true;
   btn.textContent = 'Updating…';
   const ok = await saveUsers();
   btn.disabled = false;
   btn.textContent = 'Update database to perform the functions';
-  if (ok) showToast('Database updated ✓', 'ok');
+  if (ok) {
+    localStorage.setItem('kn-gh-token', tinput.value.trim());
+    tinput.disabled = true;
+    status.style.display = 'block';
+    status.style.color   = '#16A34A';
+    status.style.fontWeight = '600';
+    status.textContent   = '✓ Database successfully updated';
+  }
 }
 
 /* ── Theme ── */
@@ -987,6 +1017,7 @@ function checkPW() {
 
   if (currentID === ADMIN_ID && pw === ADMIN_PW) {
     errEl.classList.remove('show');
+    initAdminToken();
     refreshUserList();
     showScreen('s-admin');
     return;
@@ -1041,6 +1072,15 @@ function changeSelfPassword() {
 }
 
 /* ── Admin ── */
+function initAdminToken() {
+  const saved  = localStorage.getItem('kn-gh-token') || '';
+  const tinput = document.getElementById('gh-token-input');
+  const status = document.getElementById('db-status');
+  tinput.value    = saved;
+  tinput.disabled = false;
+  status.style.display = 'none';
+}
+
 function refreshUserList() {
   const el   = document.getElementById('user-list');
   const keys = Object.keys(users);
