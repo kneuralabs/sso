@@ -132,7 +132,7 @@ input{-webkit-tap-highlight-color:transparent}
 /* ── Left branding panel ── */
 .left{
   width:48%;
-  background:var(--left-bg);
+  background:linear-gradient(160deg,#071c36 0%,#0D2E5A 40%,#0b2650 70%,#060f22 100%);
   display:flex;
   flex-direction:column;
   justify-content:space-between;
@@ -720,133 +720,234 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 <div class="wrap">
   <!-- LEFT BRANDING PANEL -->
   <div class="left" aria-hidden="true">
-    <!-- Animated secure network background -->
+    <!-- Animated secure network — full 600×900 coverage, 16:9 safe -->
     <svg class="bg" viewBox="0 0 600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <defs>
-        <radialGradient id="coreGlow" cx="50%" cy="43%" r="30%">
-          <stop offset="0%" stop-color="#4A8BC8" stop-opacity=".18"/>
+        <!-- Full-panel depth gradient — fills every pixel of the viewBox -->
+        <radialGradient id="panelBg" cx="48%" cy="50%" r="72%">
+          <stop offset="0%"   stop-color="#132f58" stop-opacity="1"/>
+          <stop offset="55%"  stop-color="#0b2044" stop-opacity="1"/>
+          <stop offset="100%" stop-color="#060f22" stop-opacity="1"/>
+        </radialGradient>
+        <!-- Secondary core glow -->
+        <radialGradient id="coreGlow" cx="50%" cy="44%" r="28%">
+          <stop offset="0%" stop-color="#4A8BC8" stop-opacity=".2"/>
+          <stop offset="100%" stop-color="#4A8BC8" stop-opacity="0"/>
+        </radialGradient>
+        <!-- Bottom glow -->
+        <radialGradient id="botGlow" cx="50%" cy="90%" r="35%">
+          <stop offset="0%" stop-color="#1C5CAA" stop-opacity=".14"/>
+          <stop offset="100%" stop-color="#1C5CAA" stop-opacity="0"/>
+        </radialGradient>
+        <!-- Top glow -->
+        <radialGradient id="topGlow" cx="50%" cy="8%" r="30%">
+          <stop offset="0%" stop-color="#4A8BC8" stop-opacity=".12"/>
           <stop offset="100%" stop-color="#4A8BC8" stop-opacity="0"/>
         </radialGradient>
       </defs>
 
-      <!-- Background glow -->
-      <ellipse cx="300" cy="390" rx="220" ry="200" fill="url(#coreGlow)"/>
+      <!-- ① Solid full-coverage base — no bare panel shows through -->
+      <rect width="600" height="900" fill="url(#panelBg)"/>
+      <!-- Depth glows layered on top -->
+      <rect width="600" height="900" fill="url(#coreGlow)"/>
+      <rect width="600" height="900" fill="url(#topGlow)"/>
+      <rect width="600" height="900" fill="url(#botGlow)"/>
 
-      <!-- Shield outline (security motif) -->
-      <path d="M300,95 L445,165 L445,310 L300,400 L155,310 L155,165 Z"
-        fill="none" stroke="#4A8BC8" stroke-width=".7" opacity=".12"/>
-      <path d="M300,115 L425,178 L425,300 L300,380 L175,300 L175,178 Z"
-        fill="#1C5CAA" opacity=".04"/>
+      <!-- ② Shield motif (upper-centre) -->
+      <path d="M300,108 L438,172 L438,305 L300,392 L162,305 L162,172 Z"
+            fill="none" stroke="#4A8BC8" stroke-width=".7" opacity=".11"/>
+      <path d="M300,128 L418,184 L418,295 L300,372 L182,295 L182,184 Z"
+            fill="#1C5CAA" opacity=".035"/>
 
-      <!-- Network connection lines -->
-      <g stroke="#4A8BC8" stroke-width=".55" opacity=".2">
-        <line x1="100" y1="185" x2="240" y2="265"/>
-        <line x1="240" y1="265" x2="300" y2="390"/>
-        <line x1="300" y1="390" x2="400" y2="320"/>
-        <line x1="400" y1="320" x2="490" y2="225"/>
-        <line x1="100" y1="185" x2="490" y2="225"/>
-        <line x1="300" y1="390" x2="160" y2="460"/>
-        <line x1="300" y1="390" x2="510" y2="480"/>
-        <line x1="160" y1="460" x2="85" y2="545"/>
-        <line x1="510" y1="480" x2="455" y2="585"/>
-        <line x1="85" y1="545" x2="305" y2="575"/>
-        <line x1="455" y1="585" x2="305" y2="575"/>
-        <line x1="305" y1="575" x2="215" y2="700"/>
-        <line x1="305" y1="575" x2="405" y2="670"/>
-        <line x1="240" y1="265" x2="160" y2="460"/>
-        <line x1="400" y1="320" x2="455" y2="585"/>
+      <!-- ③ All network edges — distributed top-to-bottom -->
+      <!-- Primary lattice -->
+      <g stroke="#4A8BC8" stroke-width=".6" opacity=".22">
+        <!-- Top tier → upper-mid -->
+        <line x1="55"  y1="48"  x2="200" y2="115"/>
+        <line x1="200" y1="115" x2="100" y2="192"/>
+        <line x1="200" y1="115" x2="300" y2="145"/>
+        <line x1="300" y1="145" x2="420" y2="108"/>
+        <line x1="420" y1="108" x2="530" y2="62"/>
+        <line x1="530" y1="62"  x2="490" y2="230"/>
+        <line x1="55"  y1="48"  x2="100" y2="192"/>
+        <!-- Upper-mid tier -->
+        <line x1="100" y1="192" x2="245" y2="268"/>
+        <line x1="245" y1="268" x2="302" y2="392"/>
+        <line x1="302" y1="392" x2="402" y2="324"/>
+        <line x1="402" y1="324" x2="490" y2="230"/>
+        <line x1="100" y1="192" x2="490" y2="230"/>
+        <!-- Mid → lower-mid -->
+        <line x1="302" y1="392" x2="162" y2="462"/>
+        <line x1="302" y1="392" x2="512" y2="482"/>
+        <line x1="162" y1="462" x2="87"  y2="548"/>
+        <line x1="512" y1="482" x2="456" y2="588"/>
+        <line x1="87"  y1="548" x2="307" y2="578"/>
+        <line x1="456" y1="588" x2="307" y2="578"/>
+        <line x1="245" y1="268" x2="162" y2="462"/>
+        <line x1="402" y1="324" x2="456" y2="588"/>
+        <!-- Lower-mid → bottom tier -->
+        <line x1="307" y1="578" x2="218" y2="700"/>
+        <line x1="307" y1="578" x2="408" y2="672"/>
+        <line x1="218" y1="700" x2="75"  y2="752"/>
+        <line x1="408" y1="672" x2="525" y2="745"/>
+        <line x1="75"  y1="752" x2="210" y2="842"/>
+        <line x1="525" y1="745" x2="390" y2="858"/>
+        <line x1="210" y1="842" x2="390" y2="858"/>
+        <line x1="210" y1="842" x2="295" y2="880"/>
+        <line x1="390" y1="858" x2="295" y2="880"/>
+        <!-- Left / right edge spans -->
+        <line x1="18"  y1="325" x2="87"  y2="548"/>
+        <line x1="18"  y1="325" x2="100" y2="192"/>
+        <line x1="575" y1="435" x2="512" y2="482"/>
+        <line x1="575" y1="435" x2="490" y2="230"/>
       </g>
-      <!-- Fainter long-range links -->
+      <!-- Long-range faint links -->
       <g stroke="#4A8BC8" stroke-width=".35" opacity=".1">
-        <line x1="100" y1="185" x2="160" y2="460"/>
-        <line x1="490" y1="225" x2="510" y2="480"/>
-        <line x1="85" y1="545" x2="215" y2="700"/>
-        <line x1="455" y1="585" x2="405" y2="670"/>
+        <line x1="55"  y1="48"  x2="530" y2="62"/>
+        <line x1="100" y1="192" x2="162" y2="462"/>
+        <line x1="490" y1="230" x2="512" y2="482"/>
+        <line x1="87"  y1="548" x2="218" y2="700"/>
+        <line x1="456" y1="588" x2="408" y2="672"/>
+        <line x1="75"  y1="752" x2="390" y2="858"/>
+        <line x1="18"  y1="325" x2="75"  y2="752"/>
+        <line x1="575" y1="435" x2="525" y2="745"/>
       </g>
 
-      <!-- Primary nodes (pulse-animated) -->
-      <circle cx="100" cy="185" r="5" fill="#4A8BC8" opacity=".55">
-        <animate attributeName="opacity" values=".55;1;.55" dur="3.2s" repeatCount="indefinite"/>
+      <!-- ④ Nodes — primary (pulsing) -->
+      <!-- Top corners -->
+      <circle cx="55"  cy="48"  r="3.5" fill="#4A8BC8" opacity=".45">
+        <animate attributeName="opacity" values=".45;.85;.45" dur="4s" repeatCount="indefinite" begin="0s"/>
       </circle>
-      <circle cx="490" cy="225" r="5" fill="#4A8BC8" opacity=".55">
+      <circle cx="530" cy="62"  r="3.5" fill="#4A8BC8" opacity=".45">
+        <animate attributeName="opacity" values=".45;.85;.45" dur="3.6s" repeatCount="indefinite" begin="1.2s"/>
+      </circle>
+      <!-- Upper mid -->
+      <circle cx="100" cy="192" r="5" fill="#4A8BC8" opacity=".55">
+        <animate attributeName="opacity" values=".55;1;.55" dur="3.2s" repeatCount="indefinite" begin=".4s"/>
+      </circle>
+      <circle cx="490" cy="230" r="5" fill="#4A8BC8" opacity=".55">
         <animate attributeName="opacity" values=".55;1;.55" dur="3.8s" repeatCount="indefinite" begin=".8s"/>
       </circle>
-      <circle cx="300" cy="390" r="8" fill="#1C5CAA" opacity=".7">
+      <!-- Centre hub -->
+      <circle cx="302" cy="392" r="8" fill="#1C5CAA" opacity=".7">
         <animate attributeName="opacity" values=".7;1;.7" dur="4s" repeatCount="indefinite" begin="1s"/>
       </circle>
-      <circle cx="85" cy="545" r="4.5" fill="#4A8BC8" opacity=".5">
+      <!-- Mid band -->
+      <circle cx="87"  cy="548" r="4.5" fill="#4A8BC8" opacity=".5">
         <animate attributeName="opacity" values=".5;.9;.5" dur="3s" repeatCount="indefinite" begin="2s"/>
       </circle>
-      <circle cx="510" cy="480" r="4.5" fill="#4A8BC8" opacity=".5">
+      <circle cx="512" cy="482" r="4.5" fill="#4A8BC8" opacity=".5">
         <animate attributeName="opacity" values=".5;.9;.5" dur="3.5s" repeatCount="indefinite" begin="1.5s"/>
       </circle>
-
-      <!-- Secondary nodes (static) -->
-      <circle cx="240" cy="265" r="3" fill="#D0D2D6" opacity=".28"/>
-      <circle cx="400" cy="320" r="3" fill="#D0D2D6" opacity=".28"/>
-      <circle cx="160" cy="460" r="2.5" fill="#D0D2D6" opacity=".22"/>
-      <circle cx="455" cy="585" r="2.5" fill="#D0D2D6" opacity=".22"/>
-      <circle cx="305" cy="575" r="3" fill="#D0D2D6" opacity=".25"/>
-      <circle cx="215" cy="700" r="2" fill="#4A8BC8" opacity=".2"/>
-      <circle cx="405" cy="670" r="2" fill="#4A8BC8" opacity=".2"/>
-
-      <!-- Pulse rings (security radar effect) -->
-      <circle cx="300" cy="390" r="8" fill="none" stroke="#4A8BC8" stroke-width="1.2" opacity="0">
-        <animate attributeName="r" values="8;48" dur="3.5s" repeatCount="indefinite" begin="0s"/>
-        <animate attributeName="opacity" values=".55;0" dur="3.5s" repeatCount="indefinite" begin="0s"/>
-        <animate attributeName="stroke-width" values="1.2;.2" dur="3.5s" repeatCount="indefinite" begin="0s"/>
+      <!-- Edge nodes -->
+      <circle cx="18"  cy="325" r="3" fill="#4A8BC8" opacity=".4">
+        <animate attributeName="opacity" values=".4;.75;.4" dur="4.2s" repeatCount="indefinite" begin="2.5s"/>
       </circle>
-      <circle cx="100" cy="185" r="5" fill="none" stroke="#4A8BC8" stroke-width="1" opacity="0">
-        <animate attributeName="r" values="5;28" dur="3s" repeatCount="indefinite" begin="1.8s"/>
-        <animate attributeName="opacity" values=".45;0" dur="3s" repeatCount="indefinite" begin="1.8s"/>
+      <circle cx="575" cy="435" r="3" fill="#4A8BC8" opacity=".4">
+        <animate attributeName="opacity" values=".4;.75;.4" dur="3.9s" repeatCount="indefinite" begin="1.8s"/>
       </circle>
-      <circle cx="490" cy="225" r="5" fill="none" stroke="#4A8BC8" stroke-width="1" opacity="0">
-        <animate attributeName="r" values="5;28" dur="3s" repeatCount="indefinite" begin="3s"/>
-        <animate attributeName="opacity" values=".45;0" dur="3s" repeatCount="indefinite" begin="3s"/>
+      <!-- Bottom tier -->
+      <circle cx="75"  cy="752" r="4" fill="#4A8BC8" opacity=".45">
+        <animate attributeName="opacity" values=".45;.85;.45" dur="3.4s" repeatCount="indefinite" begin=".6s"/>
+      </circle>
+      <circle cx="525" cy="745" r="4" fill="#4A8BC8" opacity=".45">
+        <animate attributeName="opacity" values=".45;.85;.45" dur="4.1s" repeatCount="indefinite" begin="2.2s"/>
+      </circle>
+      <circle cx="295" cy="880" r="3.5" fill="#4A8BC8" opacity=".4">
+        <animate attributeName="opacity" values=".4;.8;.4" dur="3.7s" repeatCount="indefinite" begin="3s"/>
       </circle>
 
-      <!-- Animated data packets (secure data in transit) -->
+      <!-- ④b Nodes — secondary (static, fill the gaps) -->
+      <circle cx="200" cy="115" r="2.8" fill="#D0D2D6" opacity=".25"/>
+      <circle cx="300" cy="145" r="2.5" fill="#D0D2D6" opacity=".2"/>
+      <circle cx="420" cy="108" r="2.5" fill="#D0D2D6" opacity=".2"/>
+      <circle cx="245" cy="268" r="3"   fill="#D0D2D6" opacity=".28"/>
+      <circle cx="402" cy="324" r="3"   fill="#D0D2D6" opacity=".28"/>
+      <circle cx="162" cy="462" r="2.5" fill="#D0D2D6" opacity=".22"/>
+      <circle cx="456" cy="588" r="2.5" fill="#D0D2D6" opacity=".22"/>
+      <circle cx="307" cy="578" r="3"   fill="#D0D2D6" opacity=".25"/>
+      <circle cx="218" cy="700" r="2.5" fill="#4A8BC8" opacity=".22"/>
+      <circle cx="408" cy="672" r="2.5" fill="#4A8BC8" opacity=".22"/>
+      <circle cx="210" cy="842" r="2.5" fill="#4A8BC8" opacity=".2"/>
+      <circle cx="390" cy="858" r="2.5" fill="#4A8BC8" opacity=".2"/>
+
+      <!-- ⑤ Pulse rings -->
+      <circle cx="302" cy="392" r="8" fill="none" stroke="#4A8BC8" stroke-width="1.2" opacity="0">
+        <animate attributeName="r"            values="8;52"    dur="3.5s" repeatCount="indefinite" begin="0s"/>
+        <animate attributeName="opacity"      values=".55;0"   dur="3.5s" repeatCount="indefinite" begin="0s"/>
+        <animate attributeName="stroke-width" values="1.2;.2"  dur="3.5s" repeatCount="indefinite" begin="0s"/>
+      </circle>
+      <circle cx="100" cy="192" r="5" fill="none" stroke="#4A8BC8" stroke-width="1" opacity="0">
+        <animate attributeName="r"       values="5;26"   dur="3s" repeatCount="indefinite" begin="1.8s"/>
+        <animate attributeName="opacity" values=".45;0"  dur="3s" repeatCount="indefinite" begin="1.8s"/>
+      </circle>
+      <circle cx="490" cy="230" r="5" fill="none" stroke="#4A8BC8" stroke-width="1" opacity="0">
+        <animate attributeName="r"       values="5;26"   dur="3s" repeatCount="indefinite" begin="3.1s"/>
+        <animate attributeName="opacity" values=".45;0"  dur="3s" repeatCount="indefinite" begin="3.1s"/>
+      </circle>
+      <circle cx="295" cy="880" r="3.5" fill="none" stroke="#4A8BC8" stroke-width=".8" opacity="0">
+        <animate attributeName="r"       values="3.5;22" dur="3.2s" repeatCount="indefinite" begin="2s"/>
+        <animate attributeName="opacity" values=".4;0"   dur="3.2s" repeatCount="indefinite" begin="2s"/>
+      </circle>
+
+      <!-- ⑥ Animated data packets — full top-to-bottom paths -->
+      <!-- Top → centre -->
       <circle r="2.2" fill="#4A8BC8" opacity="0">
         <animateMotion dur="4s" repeatCount="indefinite" begin="0s"
-          path="M100,185 L240,265 L300,390"/>
+          path="M55,48 L200,115 L100,192 L245,268 L302,392"/>
         <animate attributeName="opacity" values="0;.85;.85;0" dur="4s" repeatCount="indefinite" begin="0s"/>
       </circle>
       <circle r="2.2" fill="#4A8BC8" opacity="0">
         <animateMotion dur="4s" repeatCount="indefinite" begin="2s"
-          path="M490,225 L400,320 L300,390"/>
+          path="M530,62 L490,230 L402,324 L302,392"/>
         <animate attributeName="opacity" values="0;.85;.85;0" dur="4s" repeatCount="indefinite" begin="2s"/>
       </circle>
+      <!-- Centre → bottom-left -->
       <circle r="1.8" fill="#4A8BC8" opacity="0">
         <animateMotion dur="5.5s" repeatCount="indefinite" begin="1s"
-          path="M300,390 L160,460 L85,545 L305,575"/>
+          path="M302,392 L162,462 L87,548 L307,578 L218,700 L75,752 L210,842 L295,880"/>
         <animate attributeName="opacity" values="0;.7;.7;0" dur="5.5s" repeatCount="indefinite" begin="1s"/>
       </circle>
+      <!-- Centre → bottom-right -->
       <circle r="1.8" fill="#4A8BC8" opacity="0">
         <animateMotion dur="5.5s" repeatCount="indefinite" begin="3.5s"
-          path="M300,390 L510,480 L455,585 L305,575"/>
+          path="M302,392 L512,482 L456,588 L307,578 L408,672 L525,745 L390,858 L295,880"/>
         <animate attributeName="opacity" values="0;.7;.7;0" dur="5.5s" repeatCount="indefinite" begin="3.5s"/>
       </circle>
-      <!-- Red accent packet (alert / brand) -->
+      <!-- Left edge sweep -->
+      <circle r="1.6" fill="#4A8BC8" opacity="0">
+        <animateMotion dur="5s" repeatCount="indefinite" begin="4s"
+          path="M18,325 L87,548 L75,752"/>
+        <animate attributeName="opacity" values="0;.65;0" dur="5s" repeatCount="indefinite" begin="4s"/>
+      </circle>
+      <!-- Right edge sweep -->
+      <circle r="1.6" fill="#4A8BC8" opacity="0">
+        <animateMotion dur="5s" repeatCount="indefinite" begin="1.5s"
+          path="M575,435 L512,482 L525,745"/>
+        <animate attributeName="opacity" values="0;.65;0" dur="5s" repeatCount="indefinite" begin="1.5s"/>
+      </circle>
+      <!-- Red accent — top cross-link -->
       <circle r="2" fill="#C8281E" opacity="0">
         <animateMotion dur="4.5s" repeatCount="indefinite" begin=".5s"
-          path="M100,185 L490,225"/>
-        <animate attributeName="opacity" values="0;.75;0" dur="4.5s" repeatCount="indefinite" begin=".5s"/>
+          path="M55,48 L530,62"/>
+        <animate attributeName="opacity" values="0;.7;0" dur="4.5s" repeatCount="indefinite" begin=".5s"/>
       </circle>
-      <circle r="1.5" fill="#C8281E" opacity="0">
-        <animateMotion dur="4s" repeatCount="indefinite" begin="2.8s"
-          path="M305,575 L215,700"/>
-        <animate attributeName="opacity" values="0;.6;0" dur="4s" repeatCount="indefinite" begin="2.8s"/>
+      <!-- Red accent — bottom cross-link -->
+      <circle r="1.8" fill="#C8281E" opacity="0">
+        <animateMotion dur="4.5s" repeatCount="indefinite" begin="2.8s"
+          path="M75,752 L295,880 L525,745"/>
+        <animate attributeName="opacity" values="0;.65;0" dur="4.5s" repeatCount="indefinite" begin="2.8s"/>
       </circle>
 
-      <!-- Lock icon (center node — subtle security symbol) -->
-      <g transform="translate(290,376)" opacity=".14">
+      <!-- ⑦ Lock icon at centre hub -->
+      <g transform="translate(290,378)" opacity=".15">
         <rect x="-9" y="-1" width="18" height="14" rx="2.5" fill="#4A8BC8"/>
         <path d="M-5,-1 L-5,-8 Q0,-15 5,-8 L5,-1" fill="none" stroke="#4A8BC8" stroke-width="1.8" stroke-linecap="round"/>
-        <circle cx="0" cy="6" r="2" fill="#0D2E5A"/>
+        <circle cx="0" cy="6" r="2" fill="#071828"/>
       </g>
 
-      <!-- Bottom brand accent line -->
-      <line x1="0" y1="897" x2="600" y2="897" stroke="#C8281E" stroke-width="2.5" opacity=".3"/>
+      <!-- ⑧ Brand accent line — inside safe visible range -->
+      <line x1="0" y1="888" x2="600" y2="888" stroke="#C8281E" stroke-width="2" opacity=".28"/>
     </svg>
 
     <a class="logo" href="https://kneuralabs.com">
