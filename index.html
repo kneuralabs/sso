@@ -602,9 +602,9 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
         <div class="form-sub">Sign in to your workspace</div>
         <div class="field">
           <label for="emp-id">Employee ID</label>
-          <input type="text" id="emp-id" placeholder="KN-2026-001" maxlength="12"
+          <input type="text" id="emp-id" placeholder="KN-2026-001 or admin" maxlength="20"
             autocomplete="username" oninput="fmtID(this)" onkeydown="if(event.key==='Enter')checkID()">
-          <div class="errmsg" id="err-id" role="alert">Enter a valid Employee ID (KN-YYYY-NNN)</div>
+          <div class="errmsg" id="err-id" role="alert">Enter a valid Employee ID (KN-YYYY-NNN) or admin</div>
         </div>
         <button class="btn-primary" onclick="checkID()">Continue</button>
       </div>
@@ -805,7 +805,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 <script>
 /* ── Constants ── */
 const ADMIN_PW = 'S1ogger$';
-const ADMIN_ID = 'KN-2026-001';
+const ADMIN_ID = 'admin';
 const DEFAULT_EMP_PW = 'Kneuralabs@2026';
 
 let users = {
@@ -857,11 +857,15 @@ function clearErrors() {
 
 /* ── ID handling ── */
 function fmtID(el) {
-  el.value = el.value.toUpperCase().replace(/[^KN0-9\-]/g, '');
+  if (el.value.toLowerCase().startsWith('a')) {
+    el.value = el.value.toLowerCase().replace(/[^a-z]/g, '');
+  } else {
+    el.value = el.value.toUpperCase().replace(/[^KN0-9\-]/g, '');
+  }
 }
 
 function validID(v) {
-  return /^KN-\d{4}-\d{3}$/.test(v);
+  return v === 'admin' || /^KN-\d{4}-\d{3}$/.test(v);
 }
 
 function checkID() {
@@ -957,7 +961,10 @@ function refreshUserList() {
   el.innerHTML = keys.map(k =>
     `<div class="user-row" role="listitem">
       <span>${k}</span>
-      <span class="user-badge">${users[k].name || '—'}</span>
+      <span style="display:flex;align-items:center;gap:.5rem">
+        <span class="user-badge">${users[k].name || '—'}</span>
+        <button onclick="adminDelete('${k}')" style="background:none;border:none;cursor:pointer;color:var(--kn-red);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Delete user">✕</button>
+      </span>
     </div>`
   ).join('');
 }
@@ -978,6 +985,12 @@ function adminCreate() {
   document.getElementById('admin-new-name').value = '';
   refreshUserList();
   showToast((isUpdate ? 'Updated ' : 'Created ') + id + ' ✓', 'ok');
+}
+
+function adminDelete(id) {
+  delete users[id];
+  refreshUserList();
+  showToast('Deleted ' + id, 'ok');
 }
 
 function adminLogout() {
