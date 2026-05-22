@@ -1038,7 +1038,7 @@ function checkPW() {
 }
 
 /* ── Password changes ── */
-function changePassword() {
+async function changePassword() {
   const oldPw  = document.getElementById('old-pw').value;
   const newPw  = document.getElementById('new-pw').value;
   const confPw = document.getElementById('conf-pw').value;
@@ -1050,14 +1050,14 @@ function changePassword() {
   if (newPw !== confPw)  { document.getElementById('err-conf').classList.add('show'); return; }
   if (!users[currentID]) users[currentID] = { name: currentID };
   users[currentID].password = newPw;
-  saveUsers();
   document.getElementById('dash-name').textContent = 'Welcome, ' + (users[currentID].name || currentID) + '.';
   document.getElementById('dash-id').textContent = currentID;
   showScreen('s-dash');
-  showToast('Password updated ✓', 'ok');
+  const ok = await saveUsers();
+  showToast(ok ? 'Password updated & database synced ✓' : 'Password updated locally (sync failed)', ok ? 'ok' : 'err');
 }
 
-function changeSelfPassword() {
+async function changeSelfPassword() {
   const oldPw  = document.getElementById('self-old-pw').value;
   const newPw  = document.getElementById('self-new-pw').value;
   const confPw = document.getElementById('self-conf-pw').value;
@@ -1066,9 +1066,9 @@ function changeSelfPassword() {
   if (newPw.length < 8) { showToast('Password must be at least 8 characters.', 'err'); return; }
   if (newPw !== confPw)  { document.getElementById('err-self-conf').classList.add('show'); return; }
   users[currentID].password = newPw;
-  saveUsers();
   showScreen('s-dash');
-  showToast('Password updated ✓', 'ok');
+  const ok = await saveUsers();
+  showToast(ok ? 'Password updated & database synced ✓' : 'Password updated locally (sync failed)', ok ? 'ok' : 'err');
 }
 
 /* ── Admin ── */
