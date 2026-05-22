@@ -77,8 +77,8 @@
   --t:200ms;
 }
 
-/* Dark mode body background also matches surface */
-[data-theme="dark"] body{background:var(--surface)}
+/* Dark mode body background also matches canvas */
+[data-theme="dark"] body{background:var(--bg)}
 
 /* ── Dark mode tokens ── */
 [data-theme="dark"]{
@@ -103,7 +103,7 @@
 /* ── Base ── */
 html,body{
   font-family:var(--font);
-  background:var(--surface);
+  background:var(--bg);
   color:var(--text);
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
