@@ -17,8 +17,8 @@
 <!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://sso.kneuralabs.com/">
-<meta property="og:title" content="Kneuralabs · Secure Workspace Sign-In">
-<meta property="og:description" content="Governance built to operate. Sign in to access your AI governance workspace — aligned to NIST AI RMF, ISO/IEC 42001:2023, and the EU AI Act.">
+<meta property="og:title" content="Kneuralabs · Verified Identity. AI Governance.">
+<meta property="og:description" content="Sign in to access your AI governance workspace — aligned to the NIST AI Risk Management Framework (NIST AI RMF), ISO/IEC 42001:2023, and the EU AI Act.">
 <meta property="og:image" content="https://sso.kneuralabs.com/og.svg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -26,8 +26,8 @@
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Kneuralabs · Secure Workspace Sign-In">
-<meta name="twitter:description" content="Governance built to operate. AI governance infrastructure aligned to NIST AI RMF, ISO/IEC 42001:2023, and the EU AI Act.">
+<meta name="twitter:title" content="Kneuralabs · Verified Identity. AI Governance.">
+<meta name="twitter:description" content="Sign in to access your AI governance workspace — aligned to the NIST AI Risk Management Framework (NIST AI RMF), ISO/IEC 42001:2023, and the EU AI Act.">
 <meta name="twitter:image" content="https://sso.kneuralabs.com/og.svg">
 
 <!-- Google Fonts: Inter -->
@@ -486,6 +486,41 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 [data-theme="dark"] .icon-sun{display:block}
 [data-theme="dark"] .icon-moon{display:none}
 
+/* ── Left panel enhancements ── */
+.left::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg,rgba(74,139,200,.06) 0%,transparent 40%,rgba(28,92,170,.04) 100%);
+  pointer-events:none;
+  animation:panelBreath 10s ease-in-out infinite alternate;
+}
+@keyframes panelBreath{from{opacity:.4}to{opacity:1}}
+
+/* Security eyebrow dot */
+.left-eyebrow{position:relative;padding-left:1.1rem}
+.left-eyebrow::before{
+  content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:6px;height:6px;border-radius:50%;background:var(--kn-sky);
+  animation:dot-blink 2.4s ease-in-out infinite;
+}
+@keyframes dot-blink{0%,100%{opacity:.35;box-shadow:none}50%{opacity:1;box-shadow:0 0 6px var(--kn-sky)}}
+
+/* Shield icon */
+.shield-icon{
+  width:42px;height:42px;margin-bottom:1.25rem;
+  opacity:.55;color:var(--kn-sky);
+}
+
+/* Badge improvements */
+.badge{
+  font-size:.5625rem;letter-spacing:.09em;text-transform:uppercase;font-weight:700;
+  color:#4a7499;background:rgba(74,139,200,.08);
+  border:1px solid rgba(74,139,200,.14);
+  padding:3px 8px;border-radius:4px;
+}
+.dot{color:#1f3d5e;font-size:.75rem}
+
 /* ── Responsive ── */
 
 /* Tablet landscape (1024–1279px) */
@@ -543,27 +578,132 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 <div class="wrap">
   <!-- LEFT BRANDING PANEL -->
   <div class="left" aria-hidden="true">
-    <!-- Geometric background echoing the KN logo's angular planes -->
-    <svg class="bg" viewBox="0 0 600 900" preserveAspectRatio="xMidYMid slice">
-      <polygon points="0,0 420,0 300,220 0,210" fill="#1C5CAA" opacity=".07"/>
-      <polygon points="420,0 600,0 600,280 380,180" fill="#4A8BC8" opacity=".05"/>
-      <polygon points="0,620 240,460 440,620 220,840 0,780" fill="#1C5CAA" opacity=".06"/>
-      <g stroke="#4A8BC8" stroke-width=".6" opacity=".16">
-        <line x1="60" y1="190" x2="280" y2="390"/>
-        <line x1="280" y1="390" x2="500" y2="250"/>
-        <line x1="280" y1="390" x2="180" y2="620"/>
-        <line x1="280" y1="390" x2="430" y2="580"/>
-        <line x1="60" y1="190" x2="500" y2="250"/>
-        <line x1="430" y1="580" x2="500" y2="250"/>
-        <line x1="120" y1="690" x2="430" y2="580"/>
-        <line x1="60" y1="190" x2="120" y2="690"/>
+    <!-- Animated secure network background -->
+    <svg class="bg" viewBox="0 0 600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <radialGradient id="coreGlow" cx="50%" cy="43%" r="30%">
+          <stop offset="0%" stop-color="#4A8BC8" stop-opacity=".18"/>
+          <stop offset="100%" stop-color="#4A8BC8" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+
+      <!-- Background glow -->
+      <ellipse cx="300" cy="390" rx="220" ry="200" fill="url(#coreGlow)"/>
+
+      <!-- Shield outline (security motif) -->
+      <path d="M300,95 L445,165 L445,310 L300,400 L155,310 L155,165 Z"
+        fill="none" stroke="#4A8BC8" stroke-width=".7" opacity=".12"/>
+      <path d="M300,115 L425,178 L425,300 L300,380 L175,300 L175,178 Z"
+        fill="#1C5CAA" opacity=".04"/>
+
+      <!-- Network connection lines -->
+      <g stroke="#4A8BC8" stroke-width=".55" opacity=".2">
+        <line x1="100" y1="185" x2="240" y2="265"/>
+        <line x1="240" y1="265" x2="300" y2="390"/>
+        <line x1="300" y1="390" x2="400" y2="320"/>
+        <line x1="400" y1="320" x2="490" y2="225"/>
+        <line x1="100" y1="185" x2="490" y2="225"/>
+        <line x1="300" y1="390" x2="160" y2="460"/>
+        <line x1="300" y1="390" x2="510" y2="480"/>
+        <line x1="160" y1="460" x2="85" y2="545"/>
+        <line x1="510" y1="480" x2="455" y2="585"/>
+        <line x1="85" y1="545" x2="305" y2="575"/>
+        <line x1="455" y1="585" x2="305" y2="575"/>
+        <line x1="305" y1="575" x2="215" y2="700"/>
+        <line x1="305" y1="575" x2="405" y2="670"/>
+        <line x1="240" y1="265" x2="160" y2="460"/>
+        <line x1="400" y1="320" x2="455" y2="585"/>
       </g>
-      <circle cx="60" cy="190" r="3.5" fill="#1C5CAA" opacity=".7"/>
-      <circle cx="500" cy="250" r="3.5" fill="#1C5CAA" opacity=".7"/>
-      <circle cx="280" cy="390" r="6" fill="none" stroke="#C8281E" stroke-width="1" opacity=".75"/>
-      <circle cx="180" cy="620" r="3" fill="#D0D2D6" opacity=".25"/>
-      <circle cx="430" cy="580" r="3" fill="#D0D2D6" opacity=".25"/>
-      <circle cx="120" cy="690" r="2.5" fill="#D0D2D6" opacity=".2"/>
+      <!-- Fainter long-range links -->
+      <g stroke="#4A8BC8" stroke-width=".35" opacity=".1">
+        <line x1="100" y1="185" x2="160" y2="460"/>
+        <line x1="490" y1="225" x2="510" y2="480"/>
+        <line x1="85" y1="545" x2="215" y2="700"/>
+        <line x1="455" y1="585" x2="405" y2="670"/>
+      </g>
+
+      <!-- Primary nodes (pulse-animated) -->
+      <circle cx="100" cy="185" r="5" fill="#4A8BC8" opacity=".55">
+        <animate attributeName="opacity" values=".55;1;.55" dur="3.2s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="490" cy="225" r="5" fill="#4A8BC8" opacity=".55">
+        <animate attributeName="opacity" values=".55;1;.55" dur="3.8s" repeatCount="indefinite" begin=".8s"/>
+      </circle>
+      <circle cx="300" cy="390" r="8" fill="#1C5CAA" opacity=".7">
+        <animate attributeName="opacity" values=".7;1;.7" dur="4s" repeatCount="indefinite" begin="1s"/>
+      </circle>
+      <circle cx="85" cy="545" r="4.5" fill="#4A8BC8" opacity=".5">
+        <animate attributeName="opacity" values=".5;.9;.5" dur="3s" repeatCount="indefinite" begin="2s"/>
+      </circle>
+      <circle cx="510" cy="480" r="4.5" fill="#4A8BC8" opacity=".5">
+        <animate attributeName="opacity" values=".5;.9;.5" dur="3.5s" repeatCount="indefinite" begin="1.5s"/>
+      </circle>
+
+      <!-- Secondary nodes (static) -->
+      <circle cx="240" cy="265" r="3" fill="#D0D2D6" opacity=".28"/>
+      <circle cx="400" cy="320" r="3" fill="#D0D2D6" opacity=".28"/>
+      <circle cx="160" cy="460" r="2.5" fill="#D0D2D6" opacity=".22"/>
+      <circle cx="455" cy="585" r="2.5" fill="#D0D2D6" opacity=".22"/>
+      <circle cx="305" cy="575" r="3" fill="#D0D2D6" opacity=".25"/>
+      <circle cx="215" cy="700" r="2" fill="#4A8BC8" opacity=".2"/>
+      <circle cx="405" cy="670" r="2" fill="#4A8BC8" opacity=".2"/>
+
+      <!-- Pulse rings (security radar effect) -->
+      <circle cx="300" cy="390" r="8" fill="none" stroke="#4A8BC8" stroke-width="1.2" opacity="0">
+        <animate attributeName="r" values="8;48" dur="3.5s" repeatCount="indefinite" begin="0s"/>
+        <animate attributeName="opacity" values=".55;0" dur="3.5s" repeatCount="indefinite" begin="0s"/>
+        <animate attributeName="stroke-width" values="1.2;.2" dur="3.5s" repeatCount="indefinite" begin="0s"/>
+      </circle>
+      <circle cx="100" cy="185" r="5" fill="none" stroke="#4A8BC8" stroke-width="1" opacity="0">
+        <animate attributeName="r" values="5;28" dur="3s" repeatCount="indefinite" begin="1.8s"/>
+        <animate attributeName="opacity" values=".45;0" dur="3s" repeatCount="indefinite" begin="1.8s"/>
+      </circle>
+      <circle cx="490" cy="225" r="5" fill="none" stroke="#4A8BC8" stroke-width="1" opacity="0">
+        <animate attributeName="r" values="5;28" dur="3s" repeatCount="indefinite" begin="3s"/>
+        <animate attributeName="opacity" values=".45;0" dur="3s" repeatCount="indefinite" begin="3s"/>
+      </circle>
+
+      <!-- Animated data packets (secure data in transit) -->
+      <circle r="2.2" fill="#4A8BC8" opacity="0">
+        <animateMotion dur="4s" repeatCount="indefinite" begin="0s"
+          path="M100,185 L240,265 L300,390"/>
+        <animate attributeName="opacity" values="0;.85;.85;0" dur="4s" repeatCount="indefinite" begin="0s"/>
+      </circle>
+      <circle r="2.2" fill="#4A8BC8" opacity="0">
+        <animateMotion dur="4s" repeatCount="indefinite" begin="2s"
+          path="M490,225 L400,320 L300,390"/>
+        <animate attributeName="opacity" values="0;.85;.85;0" dur="4s" repeatCount="indefinite" begin="2s"/>
+      </circle>
+      <circle r="1.8" fill="#4A8BC8" opacity="0">
+        <animateMotion dur="5.5s" repeatCount="indefinite" begin="1s"
+          path="M300,390 L160,460 L85,545 L305,575"/>
+        <animate attributeName="opacity" values="0;.7;.7;0" dur="5.5s" repeatCount="indefinite" begin="1s"/>
+      </circle>
+      <circle r="1.8" fill="#4A8BC8" opacity="0">
+        <animateMotion dur="5.5s" repeatCount="indefinite" begin="3.5s"
+          path="M300,390 L510,480 L455,585 L305,575"/>
+        <animate attributeName="opacity" values="0;.7;.7;0" dur="5.5s" repeatCount="indefinite" begin="3.5s"/>
+      </circle>
+      <!-- Red accent packet (alert / brand) -->
+      <circle r="2" fill="#C8281E" opacity="0">
+        <animateMotion dur="4.5s" repeatCount="indefinite" begin=".5s"
+          path="M100,185 L490,225"/>
+        <animate attributeName="opacity" values="0;.75;0" dur="4.5s" repeatCount="indefinite" begin=".5s"/>
+      </circle>
+      <circle r="1.5" fill="#C8281E" opacity="0">
+        <animateMotion dur="4s" repeatCount="indefinite" begin="2.8s"
+          path="M305,575 L215,700"/>
+        <animate attributeName="opacity" values="0;.6;0" dur="4s" repeatCount="indefinite" begin="2.8s"/>
+      </circle>
+
+      <!-- Lock icon (center node — subtle security symbol) -->
+      <g transform="translate(290,376)" opacity=".14">
+        <rect x="-9" y="-1" width="18" height="14" rx="2.5" fill="#4A8BC8"/>
+        <path d="M-5,-1 L-5,-8 Q0,-15 5,-8 L5,-1" fill="none" stroke="#4A8BC8" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="0" cy="6" r="2" fill="#0D2E5A"/>
+      </g>
+
+      <!-- Bottom brand accent line -->
       <line x1="0" y1="897" x2="600" y2="897" stroke="#C8281E" stroke-width="2.5" opacity=".3"/>
     </svg>
 
@@ -573,8 +713,12 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
     </a>
 
     <div class="left-content">
-      <div class="left-eyebrow">Secure Workspace</div>
-      <h1>Governance built<br>to <em>operate.</em></h1>
+      <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5 4.5-1.35 8-6.25 8-11.5V6L12 2z"/>
+        <polyline points="9 12 11 14 15 10"/>
+      </svg>
+      <div class="left-eyebrow">AI Security &amp; Governance</div>
+      <h1>Verified identity.<br>AI held <em>accountable.</em></h1>
       <p>Sign in to access your AI governance workspace — aligned to the NIST AI Risk Management Framework (NIST AI RMF), ISO/IEC 42001:2023, and the EU AI Act.</p>
     </div>
 
@@ -712,7 +856,9 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 
       <!-- SCREEN: Dashboard (logged in) -->
       <div class="screen" id="s-dash">
-        <div class="success-icon" aria-hidden="true">✓</div>
+        <div class="success-icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#16A34A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
         <div class="form-title" id="dash-name">Welcome!</div>
         <div class="form-sub">You are signed in to your workspace.</div>
         <div class="info-box">
