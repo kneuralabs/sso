@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <!-- Background: Deep Navy -->
+  <rect width="1200" height="630" fill="#0D2E5A"/>
+
+  <!-- Geometric accent planes (echoing the KN logo's angular structure) -->
+  <polygon points="0,0 500,0 340,230 0,220" fill="#1C5CAA" opacity="0.22"/>
+  <polygon points="780,0 1200,0 1200,320 900,200" fill="#4A8BC8" opacity="0.12"/>
+  <polygon points="0,580 280,470 560,580 320,630 0,630" fill="#1C5CAA" opacity="0.18"/>
+  <polygon points="900,630 1200,500 1200,630" fill="#1C5CAA" opacity="0.15"/>
+
+  <!-- Subtle line geometry -->
+  <line x1="80" y1="220" x2="380" y2="420" stroke="#4A8BC8" stroke-width="0.8" opacity="0.2"/>
+  <line x1="380" y1="420" x2="640" y2="280" stroke="#4A8BC8" stroke-width="0.8" opacity="0.2"/>
+  <line x1="380" y1="420" x2="260" y2="560" stroke="#4A8BC8" stroke-width="0.8" opacity="0.15"/>
+  <line x1="80" y1="220" x2="640" y2="280" stroke="#4A8BC8" stroke-width="0.8" opacity="0.15"/>
+
+  <!-- Accent dot nodes -->
+  <circle cx="80" cy="220" r="4" fill="#1C5CAA" opacity="0.8"/>
+  <circle cx="640" cy="280" r="4" fill="#1C5CAA" opacity="0.8"/>
+  <circle cx="380" cy="420" r="7" fill="none" stroke="#C8281E" stroke-width="1.2" opacity="0.9"/>
+
+  <!-- Left vertical accent bar (Royal Blue) -->
+  <rect x="0" y="0" width="5" height="630" fill="#1C5CAA"/>
+
+  <!-- Bottom Precision Red accent bar -->
+  <rect x="0" y="608" width="1200" height="22" fill="#C8281E"/>
+
+  <!-- Logo mark (geometric approximation of the KN chevron) -->
+  <g transform="translate(72, 72)">
+    <rect width="120" height="120" rx="10" fill="#1C5CAA"/>
+    <!-- Upper silver plane -->
+    <polygon points="18,18 102,18 60,60" fill="#D0D2D6" opacity="0.92"/>
+    <!-- Lower silver plane -->
+    <polygon points="18,102 102,102 60,60" fill="#C0C2C6" opacity="0.88"/>
+    <!-- Precision Red central accent -->
+    <polygon points="60,60 102,38 102,82" fill="#C8281E"/>
+  </g>
+
+  <!-- Company name -->
+  <text x="220" y="138" font-family="Inter, Arial, Helvetica, sans-serif" font-size="54" font-weight="700" fill="#F7F8FA" letter-spacing="-1.5">KNEURALABS</text>
+
+  <!-- Eyebrow label -->
+  <text x="222" y="82" font-family="Inter, Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#4A8BC8" letter-spacing="3">SECURE WORKSPACE</text>
+
+  <!-- Divider rule -->
+  <rect x="72" y="168" width="1056" height="1.5" fill="#1C5CAA" opacity="0.5"/>
+
+  <!-- Tagline -->
+  <text x="72" y="228" font-family="Inter, Arial, Helvetica, sans-serif" font-size="26" font-weight="400" fill="#F7F8FA" opacity="0.92">Governance built to operate.</text>
+
+  <!-- Sub-line -->
+  <text x="72" y="276" font-family="Inter, Arial, Helvetica, sans-serif" font-size="18" font-weight="400" fill="#7BA8CC">AI governance infrastructure for organisations that are accountable.</text>
+
+  <!-- Divider -->
+  <rect x="72" y="320" width="400" height="1" fill="#1C5CAA" opacity="0.4"/>
+
+  <!-- Regulatory compliance badges -->
+  <!-- NIST AI RMF -->
+  <rect x="72" y="348" width="198" height="38" rx="6" fill="#1C5CAA" opacity="0.45"/>
+  <text x="92" y="373" font-family="Inter, Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" fill="#F7F8FA" letter-spacing="1.5">NIST AI RMF</text>
+
+  <!-- ISO/IEC 42001 -->
+  <rect x="282" y="348" width="212" height="38" rx="6" fill="#1C5CAA" opacity="0.45"/>
+  <text x="302" y="373" font-family="Inter, Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" fill="#F7F8FA" letter-spacing="1.5">ISO/IEC 42001</text>
+
+  <!-- EU AI Act -->
+  <rect x="506" y="348" width="168" height="38" rx="6" fill="#C8281E" opacity="0.55"/>
+  <text x="526" y="373" font-family="Inter, Arial, Helvetica, sans-serif" font-size="12.5" font-weight="700" fill="#F7F8FA" letter-spacing="1.5">EU AI Act</text>
+
+  <!-- URL / domain -->
+  <text x="72" y="572" font-family="Inter, Arial, Helvetica, sans-serif" font-size="15" font-weight="400" fill="#4A8BC8" opacity="0.8">sso.kneuralabs.com</text>
+</svg>
