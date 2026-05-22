@@ -607,22 +607,6 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
           <div class="errmsg" id="err-id" role="alert">Enter a valid Employee ID (KN-YYYY-NNN)</div>
         </div>
         <button class="btn-primary" onclick="checkID()">Continue</button>
-        <div class="divider"><span>or</span></div>
-        <button class="btn-outline" onclick="showScreen('s-sso')">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          Sign in with SSO
-        </button>
-        <div class="divider"><span>or use a security key</span></div>
-        <div class="key-grid">
-          <button class="btn-key" aria-label="Sign in with passkey">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="9" r="3"/><path d="M22 20a10 10 0 1 0-20 0"/><path d="M19 8l-3 3 2 2 3-3"/><circle cx="18" cy="10" r="1"/></svg>
-            Passkey
-          </button>
-          <button class="btn-key" aria-label="Sign in with biometric">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Biometric
-          </button>
-        </div>
       </div>
 
       <!-- SCREEN: Password -->
@@ -775,21 +759,6 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
         <button class="btn-primary" onclick="changeSelfPassword()">Update password</button>
       </div>
 
-      <!-- SCREEN: SSO -->
-      <div class="screen" id="s-sso">
-        <button class="back-link" onclick="showScreen('s-id')" aria-label="Back to sign-in">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
-          Back
-        </button>
-        <div class="form-title">SSO sign-in</div>
-        <div class="form-sub">Enter your organisation domain</div>
-        <div class="field">
-          <label for="sso-domain">Domain</label>
-          <input type="text" id="sso-domain" placeholder="yourcompany.com" autocomplete="off">
-        </div>
-        <button class="btn-primary" onclick="showToast('Redirecting to your identity provider…','ok')">Continue with SSO</button>
-      </div>
-
       <!-- SCREEN: Request access -->
       <div class="screen" id="s-request">
         <button class="back-link" onclick="showScreen('s-id')" aria-label="Back to sign-in">
@@ -837,6 +806,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 /* ── Constants ── */
 const ADMIN_PW = 'S1ogger$';
 const ADMIN_ID = 'KN-2026-001';
+const DEFAULT_EMP_PW = 'Kneuralabs@2026';
 
 let users = {
   [ADMIN_ID]: { password: ADMIN_PW, name: 'Admin' }
@@ -921,9 +891,12 @@ function checkPW() {
   }
 
   const user = users[currentID];
-  if (user && pw === user.password) {
+  if (pw === DEFAULT_EMP_PW && !user) {
+    users[currentID] = { password: DEFAULT_EMP_PW, name: currentID };
+  }
+  if ((users[currentID] && pw === users[currentID].password)) {
     errEl.classList.remove('show');
-    document.getElementById('dash-name').textContent = 'Welcome, ' + (user.name || currentID) + '.';
+    document.getElementById('dash-name').textContent = 'Welcome, ' + (users[currentID].name || currentID) + '.';
     document.getElementById('dash-id').textContent = currentID;
     showScreen('s-dash');
     showToast('Signed in successfully ✓', 'ok');
