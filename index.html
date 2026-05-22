@@ -1096,7 +1096,16 @@ function refreshUserList() {
   ).join('');
 }
 
-function adminCreate() {
+function markDbSynced() {
+  const status = document.getElementById('db-status');
+  if (!status) return;
+  status.style.display    = 'block';
+  status.style.color      = '#16A34A';
+  status.style.fontWeight = '600';
+  status.textContent      = '✓ Database successfully updated';
+}
+
+async function adminCreate() {
   const id   = document.getElementById('admin-new-id').value.trim().toUpperCase();
   const name = document.getElementById('admin-new-name').value.trim();
   if (!validEmpID(id)) { showToast('Enter a valid Employee ID.', 'err'); return; }
@@ -1109,15 +1118,17 @@ function adminCreate() {
   document.getElementById('admin-new-id').value   = '';
   document.getElementById('admin-new-name').value = '';
   refreshUserList();
-  saveUsers();
-  showToast((isUpdate ? 'Updated ' : 'Created ') + id + ' ✓', 'ok');
+  const ok = await saveUsers();
+  if (ok) markDbSynced();
+  showToast((isUpdate ? 'Updated ' : 'Created ') + id + (ok ? ' & synced ✓' : ' locally (sync failed)'), ok ? 'ok' : 'err');
 }
 
-function adminDelete(id) {
+async function adminDelete(id) {
   delete users[id];
   refreshUserList();
-  saveUsers();
-  showToast('Deleted ' + id, 'ok');
+  const ok = await saveUsers();
+  if (ok) markDbSynced();
+  showToast('Deleted ' + id + (ok ? ' & synced ✓' : ' locally (sync failed)'), ok ? 'ok' : 'err');
 }
 
 function adminLogout() {
