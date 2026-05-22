@@ -682,20 +682,14 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 
         <div class="field">
           <label for="admin-new-id">Employee ID</label>
-          <input type="text" id="admin-new-id" placeholder="KN-2026-001" maxlength="12" oninput="fmtID(this)">
+          <input type="text" id="admin-new-id" placeholder="KN-2026-001" maxlength="12" oninput="fmtEmpID(this)">
         </div>
         <div class="field">
-          <label for="admin-new-pw">Assign password</label>
-          <div class="pw-wrap">
-            <input type="password" id="admin-new-pw" placeholder="Temporary password">
-            <button class="pw-toggle" onclick="togglePw('admin-new-pw',this)" type="button">Show</button>
-          </div>
-        </div>
-        <div class="field">
-          <label for="admin-new-name">Display name (optional)</label>
+          <label for="admin-new-name">Display name</label>
           <input type="text" id="admin-new-name" placeholder="Jane Smith">
         </div>
-        <button class="btn-primary" onclick="adminCreate()">Create / update user</button>
+        <p style="font-size:.75rem;color:var(--text-muted);margin:.25rem 0 .75rem">New users get default password: <code style="color:var(--text);background:var(--badge-bg);padding:1px 6px;border-radius:4px;font-size:.75rem">Kneuralabs@2026</code></p>
+        <button class="btn-primary" onclick="adminCreate()">Add / Update user</button>
 
         <div style="margin-top:1.5rem;border-top:1px solid var(--border);padding-top:1.25rem">
           <div style="font-size:.6875rem;color:var(--text-muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:.75rem;font-weight:700">Active users</div>
@@ -802,41 +796,86 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 
 <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
+/* ── Config ── */
+const GITHUB_TOKEN = '';          // Fine-grained PAT: Contents read+write for kneuralabs/sso
+const GH_OWNER     = 'kneuralabs';
+const GH_REPO      = 'sso';
+const GH_FILE      = 'DATA.xlsx';
+
 /* ── Constants ── */
-const ADMIN_PW = 'S1ogger$';
-const ADMIN_ID = 'admin';
+const ADMIN_PW       = 'S1ogger$';
+const ADMIN_ID       = 'admin';
 const DEFAULT_EMP_PW = 'Kneuralabs@2026';
 
-let users = {
-  [ADMIN_ID]: { password: ADMIN_PW, name: 'Admin' }
-};
-let currentID = '';
+let users      = {};   // { 'KN-YYYY-NNN': { password, name } }
+let currentID  = '';
+let ghFileSHA  = '';
 
-/* ── Theme: time-based init, localStorage override ── */
+/* ── GitHub helpers ── */
+async function loadUsers() {
+  try {
+    const hdrs = { Accept: 'application/vnd.github+json' };
+    if (GITHUB_TOKEN) hdrs.Authorization = 'Bearer ' + GITHUB_TOKEN;
+    const res = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
+      { headers: hdrs }
+    );
+    if (!res.ok) return;
+    const j = await res.json();
+    ghFileSHA = j.sha;
+    const bin = atob(j.content.replace(/\n/g, ''));
+    const buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    const wb   = XLSX.read(buf, { type: 'array' });
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+    users = {};
+    for (let i = 1; i < rows.length; i++) {
+      const [id, pw, nm] = rows[i];
+      if (id) users[String(id)] = { password: String(pw || DEFAULT_EMP_PW), name: String(nm || id) };
+    }
+  } catch(e) { console.error('loadUsers:', e); }
+}
+
+async function saveUsers() {
+  if (!GITHUB_TOKEN) { showToast('Set GITHUB_TOKEN to persist changes.', 'err'); return; }
+  try {
+    const rows = [['id', 'password', 'name'],
+      ...Object.entries(users).map(([id, u]) => [id, u.password, u.name || id])];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Users');
+    const content = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
+    const body = { message: 'Update user database', content };
+    if (ghFileSHA) body.sha = ghFileSHA;
+    const res = await fetch(
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
+      { method: 'PUT',
+        headers: { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + GITHUB_TOKEN, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body) }
+    );
+    if (res.ok) { const j = await res.json(); ghFileSHA = j.content.sha; }
+    else { const e = await res.json(); showToast('Save failed: ' + (e.message || 'error'), 'err'); }
+  } catch(e) { showToast('Save failed.', 'err'); console.error(e); }
+}
+
+/* ── Theme ── */
 (function initTheme() {
   const stored = localStorage.getItem('kn-theme');
   const h = new Date().getHours();
-  const timeTheme = (h >= 6 && h < 18) ? 'light' : 'dark';
-  const theme = stored || timeTheme;
+  const theme = stored || ((h >= 6 && h < 18) ? 'light' : 'dark');
   document.documentElement.setAttribute('data-theme', theme);
   updateThemeMeta(theme);
-  // Enable smooth transitions after initial paint to avoid flash
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      document.body.classList.add('theme-ready');
-    });
-  });
+  requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.add('theme-ready')));
 })();
 
-function updateThemeMeta(theme) {
+function updateThemeMeta(t) {
   const m = document.getElementById('theme-color-meta');
-  if (m) m.content = theme === 'dark' ? '#050c18' : '#0D2E5A';
+  if (m) m.content = t === 'dark' ? '#050c18' : '#0D2E5A';
 }
 
 function toggleTheme() {
-  const cur = document.documentElement.getAttribute('data-theme');
-  const next = cur === 'dark' ? 'light' : 'dark';
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('kn-theme', next);
   updateThemeMeta(next);
@@ -855,27 +894,41 @@ function clearErrors() {
   document.querySelectorAll('input.err').forEach(e => e.classList.remove('err'));
 }
 
-/* ── ID handling ── */
+/* ── ID formatting ── */
 function fmtID(el) {
-  if (el.value.toLowerCase().startsWith('a')) {
+  if (el.value.toLowerCase().startsWith('a'))
     el.value = el.value.toLowerCase().replace(/[^a-z]/g, '');
-  } else {
+  else
     el.value = el.value.toUpperCase().replace(/[^KN0-9\-]/g, '');
-  }
 }
 
-function validID(v) {
-  return v === 'admin' || /^KN-\d{4}-\d{3}$/.test(v);
+function fmtEmpID(el) {
+  el.value = el.value.toUpperCase().replace(/[^KN0-9\-]/g, '');
 }
 
+function validEmpID(v) { return /^KN-\d{4}-\d{3}$/.test(v); }
+function validID(v)    { return v === 'admin' || validEmpID(v); }
+
+/* ── Check ID ── */
 function checkID() {
-  const raw = document.getElementById('emp-id').value.trim();
-  const v = raw.toLowerCase() === 'admin' ? 'admin' : raw.toUpperCase();
+  const raw  = document.getElementById('emp-id').value.trim();
+  const v    = raw.toLowerCase() === 'admin' ? 'admin' : raw.toUpperCase();
+  const errEl = document.getElementById('err-id');
+
   if (!validID(v)) {
-    document.getElementById('err-id').classList.add('show');
+    errEl.textContent = 'Enter a valid Employee ID (KN-YYYY-NNN)';
+    errEl.classList.add('show');
     document.getElementById('emp-id').classList.add('err');
     return;
   }
+
+  if (v !== ADMIN_ID && !users[v]) {
+    errEl.textContent = 'No Kneuralabs Employee with this ID';
+    errEl.classList.add('show');
+    document.getElementById('emp-id').classList.add('err');
+    return;
+  }
+
   currentID = v;
   document.getElementById('pw-who').textContent = v;
   document.getElementById('pw-input').value = '';
@@ -885,7 +938,7 @@ function checkID() {
 
 /* ── Password check ── */
 function checkPW() {
-  const pw = document.getElementById('pw-input').value;
+  const pw    = document.getElementById('pw-input').value;
   const errEl = document.getElementById('err-pw');
 
   if (currentID === ADMIN_ID && pw === ADMIN_PW) {
@@ -896,12 +949,9 @@ function checkPW() {
   }
 
   const user = users[currentID];
-  if (pw === DEFAULT_EMP_PW && !user) {
-    users[currentID] = { password: DEFAULT_EMP_PW, name: currentID };
-  }
-  if ((users[currentID] && pw === users[currentID].password)) {
+  if (user && pw === user.password) {
     errEl.classList.remove('show');
-    document.getElementById('dash-name').textContent = 'Welcome, ' + (users[currentID].name || currentID) + '.';
+    document.getElementById('dash-name').textContent = 'Welcome, ' + (user.name || currentID) + '.';
     document.getElementById('dash-id').textContent = currentID;
     showScreen('s-dash');
     showToast('Signed in successfully ✓', 'ok');
@@ -914,51 +964,43 @@ function checkPW() {
 
 /* ── Password changes ── */
 function changePassword() {
-  const oldPw = document.getElementById('old-pw').value;
-  const newPw = document.getElementById('new-pw').value;
+  const oldPw  = document.getElementById('old-pw').value;
+  const newPw  = document.getElementById('new-pw').value;
   const confPw = document.getElementById('conf-pw').value;
-
-  const user = users[currentID];
-  const validOld = oldPw === ADMIN_PW || (user && oldPw === user.password);
-
-  if (!validOld) { document.getElementById('err-old').classList.add('show'); return; }
+  const user   = users[currentID];
+  if (oldPw !== ADMIN_PW && !(user && oldPw === user.password)) {
+    document.getElementById('err-old').classList.add('show'); return;
+  }
   if (newPw.length < 8) { showToast('Password must be at least 8 characters.', 'err'); return; }
-  if (newPw !== confPw) { document.getElementById('err-conf').classList.add('show'); return; }
-
+  if (newPw !== confPw)  { document.getElementById('err-conf').classList.add('show'); return; }
   if (!users[currentID]) users[currentID] = { name: currentID };
   users[currentID].password = newPw;
-
+  saveUsers();
   document.getElementById('dash-name').textContent = 'Welcome, ' + (users[currentID].name || currentID) + '.';
   document.getElementById('dash-id').textContent = currentID;
   showScreen('s-dash');
-  showToast('Password updated successfully ✓', 'ok');
+  showToast('Password updated ✓', 'ok');
 }
 
 function changeSelfPassword() {
-  const oldPw = document.getElementById('self-old-pw').value;
-  const newPw = document.getElementById('self-new-pw').value;
+  const oldPw  = document.getElementById('self-old-pw').value;
+  const newPw  = document.getElementById('self-new-pw').value;
   const confPw = document.getElementById('self-conf-pw').value;
-
-  const user = users[currentID];
-  if (!user || oldPw !== user.password) {
-    document.getElementById('err-self-old').classList.add('show'); return;
-  }
+  const user   = users[currentID];
+  if (!user || oldPw !== user.password) { document.getElementById('err-self-old').classList.add('show'); return; }
   if (newPw.length < 8) { showToast('Password must be at least 8 characters.', 'err'); return; }
-  if (newPw !== confPw) { document.getElementById('err-self-conf').classList.add('show'); return; }
-
+  if (newPw !== confPw)  { document.getElementById('err-self-conf').classList.add('show'); return; }
   users[currentID].password = newPw;
+  saveUsers();
   showScreen('s-dash');
   showToast('Password updated ✓', 'ok');
 }
 
 /* ── Admin ── */
 function refreshUserList() {
-  const el = document.getElementById('user-list');
+  const el   = document.getElementById('user-list');
   const keys = Object.keys(users);
-  if (!keys.length) {
-    el.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted)">No users yet.</div>';
-    return;
-  }
+  if (!keys.length) { el.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted)">No users yet.</div>'; return; }
   el.innerHTML = keys.map(k =>
     `<div class="user-row" role="listitem">
       <span>${k}</span>
@@ -971,26 +1013,26 @@ function refreshUserList() {
 }
 
 function adminCreate() {
-  const id = document.getElementById('admin-new-id').value.trim().toUpperCase();
-  const pw = document.getElementById('admin-new-pw').value;
+  const id   = document.getElementById('admin-new-id').value.trim().toUpperCase();
   const name = document.getElementById('admin-new-name').value.trim();
-
-  if (!validID(id)) { showToast('Enter a valid Employee ID.', 'err'); return; }
-  if (!pw) { showToast('Enter a password for this user.', 'err'); return; }
-
+  if (!validEmpID(id)) { showToast('Enter a valid Employee ID.', 'err'); return; }
   const isUpdate = !!users[id];
-  users[id] = { password: pw, name: name || id };
-
-  document.getElementById('admin-new-id').value = '';
-  document.getElementById('admin-new-pw').value = '';
+  if (isUpdate) {
+    if (name) users[id].name = name;
+  } else {
+    users[id] = { password: DEFAULT_EMP_PW, name: name || id };
+  }
+  document.getElementById('admin-new-id').value   = '';
   document.getElementById('admin-new-name').value = '';
   refreshUserList();
+  saveUsers();
   showToast((isUpdate ? 'Updated ' : 'Created ') + id + ' ✓', 'ok');
 }
 
 function adminDelete(id) {
   delete users[id];
   refreshUserList();
+  saveUsers();
   showToast('Deleted ' + id, 'ok');
 }
 
@@ -1002,7 +1044,7 @@ function adminLogout() {
 
 function doLogout() {
   currentID = '';
-  document.getElementById('emp-id').value = '';
+  document.getElementById('emp-id').value   = '';
   document.getElementById('pw-input').value = '';
   showScreen('s-id');
   showToast('Signed out.', 'ok');
@@ -1025,19 +1067,19 @@ function strengthScore(v) {
 }
 
 function applyStrength(v, fillId, labelId) {
-  const colors = ['#C8281E', '#D97706', '#16A34A', '#1C5CAA'];
-  const labels = ['Weak', 'Fair', 'Good', 'Strong'];
-  const fill = document.getElementById(fillId);
+  const colors = ['#C8281E','#D97706','#16A34A','#1C5CAA'];
+  const labels = ['Weak','Fair','Good','Strong'];
+  const fill  = document.getElementById(fillId);
   const label = document.getElementById(labelId);
   if (!v) { fill.style.width = '0%'; label.textContent = ''; return; }
   const s = strengthScore(v);
-  fill.style.width = (s * 25) + '%';
-  fill.style.background = colors[Math.max(s - 1, 0)];
-  label.textContent = labels[Math.max(s - 1, 0)];
-  label.style.color = colors[Math.max(s - 1, 0)];
+  fill.style.width      = (s * 25) + '%';
+  fill.style.background = colors[Math.max(s-1,0)];
+  label.textContent     = labels[Math.max(s-1,0)];
+  label.style.color     = colors[Math.max(s-1,0)];
 }
 
-function checkStrength(v) { applyStrength(v, 'str-fill', 'str-label'); }
+function checkStrength(v)  { applyStrength(v, 'str-fill',  'str-label'); }
 function checkStrength2(v) { applyStrength(v, 'str-fill2', 'str-label2'); }
 
 let toastTimer;
@@ -1048,6 +1090,9 @@ function showToast(msg, type) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
 }
+
+/* ── Init ── */
+loadUsers();
 </script>
 </body>
 </html>
