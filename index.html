@@ -33,7 +33,9 @@
 <!-- Google Fonts: Inter -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'" />
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" /></noscript>
 
 <style>
 /* ── Reset ── */
@@ -1048,16 +1050,6 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
         <div class="form-sub">Manage employee accounts</div>
 
         <div class="field">
-          <label for="gh-token-input">GitHub token</label>
-          <div class="pw-wrap">
-            <input type="password" id="gh-token-input" placeholder="Paste GitHub token (ghp_…)" autocomplete="off"
-              oninput="onTokenInput()">
-            <button class="pw-toggle" onclick="togglePw('gh-token-input',this)" type="button">Show</button>
-          </div>
-          <div id="db-status" style="font-size:.75rem;margin-top:.35rem;display:none"></div>
-        </div>
-
-        <div class="field">
           <label for="admin-new-id">Employee ID</label>
           <input type="text" id="admin-new-id" placeholder="KN-2026-001" maxlength="12" oninput="fmtEmpID(this)">
         </div>
@@ -1073,7 +1065,6 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
           <div id="user-list" role="list"></div>
         </div>
 
-        <button class="btn-primary" id="btn-update-db" style="margin-top:1.25rem" onclick="manualSave()">Update database to perform the functions</button>
         <button class="btn-outline" id="btn-close-admin" style="margin-top:.625rem" onclick="doClose()">Close</button>
       </div>
 
@@ -1176,26 +1167,29 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 
 <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 /* ── Config ── */
-const GH_OWNER = 'kneuralabs';
-const GH_REPO  = 'sso';
-const GH_FILE  = 'DATA.xlsx';
+const SUPA_URL = 'https://brysartqcjylgqwmnjkk.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyeXNhcnRxY2p5bGdxd21uamtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMjgyNzMsImV4cCI6MjA5MTkwNDI3M30.CanSxg9nrotjPuoFnGUaU6WMOxLovAtzNONS_JJ1WVY';
 
-function getToken() {
-  const el = document.getElementById('gh-token-input');
-  return (el ? el.value.trim() : '') || localStorage.getItem('kn-gh-token') || '';
+/* ── Supabase RPC helper ── */
+async function rpc(fn, params) {
+  const res = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+    },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) throw new Error(`RPC ${fn} failed: ${res.status}`);
+  return res.json();
 }
 
-/* ── Constants ── */
-const ADMIN_PW       = 'S1ogger$';
-const ADMIN_ID       = 'admin';
-const DEFAULT_EMP_PW = 'Kneuralabs@2026';
-
-let users      = {};   // { 'KN-YYYY-NNN': { password, name } }
+/* ── Session state (in-memory only, never persisted) ── */
 let currentID  = '';
-let ghFileSHA  = '';
+let currentPw  = '';  // held only for admin ops this session, never stored
 
 const _params      = new URLSearchParams(window.location.search);
 const redirectUrl  = _params.get('redirect') || _params.get('next') || _params.get('returnUrl') || _params.get('continue') || '';
@@ -1203,111 +1197,6 @@ let   _redirectWin = null;
 
 const _ssoChannel = new BroadcastChannel('kn-sso-close');
 _ssoChannel.onmessage = () => _closeThisTab();
-
-/* ── Encryption helpers (AES-GCM / PBKDF2) ── */
-const ENC_MAGIC = new Uint8Array([0x4B,0x4E,0x44,0x42,0x31]); // "KNDB1"
-
-async function _deriveKey(password, salt) {
-  const raw = await crypto.subtle.importKey(
-    'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey(
-    { name:'PBKDF2', salt, iterations:100000, hash:'SHA-256' },
-    raw, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']);
-}
-
-async function encryptBytes(data, password) {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const iv   = crypto.getRandomValues(new Uint8Array(12));
-  const key  = await _deriveKey(password, salt);
-  const ct   = new Uint8Array(await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, data));
-  const out  = new Uint8Array(5 + 16 + 12 + ct.length);
-  out.set(ENC_MAGIC, 0); out.set(salt, 5); out.set(iv, 21); out.set(ct, 33);
-  return out;
-}
-
-async function decryptBytes(data, password) {
-  for (let i = 0; i < 5; i++) if (data[i] !== ENC_MAGIC[i]) return data; // not encrypted
-  const salt = data.slice(5, 21), iv = data.slice(21, 33), ct = data.slice(33);
-  const key  = await _deriveKey(password, salt);
-  return new Uint8Array(await crypto.subtle.decrypt({ name:'AES-GCM', iv }, key, ct));
-}
-
-/* ── GitHub helpers ── */
-async function loadUsers() {
-  try {
-    const token = getToken();
-    const hdrs = { Accept: 'application/vnd.github+json' };
-    if (token) hdrs.Authorization = 'Bearer ' + token;
-    const res = await fetch(
-      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
-      { headers: hdrs }
-    );
-    if (!res.ok) return;
-    const j = await res.json();
-    ghFileSHA = j.sha;
-    const bin = atob(j.content.replace(/\n/g, ''));
-    let buf = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-    buf = await decryptBytes(buf, ADMIN_PW);
-    const wb   = XLSX.read(buf, { type: 'array' });
-    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
-    users = {};
-    for (let i = 1; i < rows.length; i++) {
-      const [id, pw, nm] = rows[i];
-      if (id) users[String(id)] = { password: String(pw || DEFAULT_EMP_PW), name: String(nm || id) };
-    }
-  } catch(e) { console.error('loadUsers:', e); }
-}
-
-async function saveUsers() {
-  const token = getToken();
-  if (!token) { showToast('Enter your GitHub token first.', 'err'); return false; }
-  try {
-    const rows = [['id', 'password', 'name'],
-      ...Object.entries(users).map(([id, u]) => [id, u.password, u.name || id])];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Users');
-    const xlsxArr   = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
-    const encrypted = await encryptBytes(new Uint8Array(xlsxArr), ADMIN_PW);
-    let binary = '';
-    for (let i = 0; i < encrypted.length; i++) binary += String.fromCharCode(encrypted[i]);
-    const content = btoa(binary);
-    const body = { message: 'Update user database', content };
-    if (ghFileSHA) body.sha = ghFileSHA;
-    const res = await fetch(
-      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
-      { method: 'PUT',
-        headers: { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-        body: JSON.stringify(body) }
-    );
-    if (res.ok) { const j = await res.json(); ghFileSHA = j.content.sha; return true; }
-    else { const e = await res.json(); showToast('Save failed: ' + (e.message || 'error'), 'err'); return false; }
-  } catch(e) { showToast('Save failed.', 'err'); console.error(e); return false; }
-}
-
-function onTokenInput() {
-  const status = document.getElementById('db-status');
-  status.style.display = 'none';
-}
-
-async function manualSave() {
-  const btn    = document.getElementById('btn-update-db');
-  const tinput = document.getElementById('gh-token-input');
-  const status = document.getElementById('db-status');
-  btn.disabled = true;
-  btn.textContent = 'Updating…';
-  const ok = await saveUsers();
-  btn.disabled = false;
-  btn.textContent = 'Update database to perform the functions';
-  if (ok) {
-    localStorage.setItem('kn-gh-token', tinput.value.trim());
-    tinput.disabled = true;
-    status.style.display = 'block';
-    status.style.color   = '#16A34A';
-    status.style.fontWeight = '600';
-    status.textContent   = '✓ Database successfully updated';
-  }
-}
 
 /* ── Theme ── */
 (function initTheme() {
@@ -1361,24 +1250,15 @@ function validID(v)    { return v === 'admin' || validEmpID(v); }
 
 /* ── Check ID ── */
 function checkID() {
-  const raw  = document.getElementById('emp-id').value.trim();
-  const v    = raw.toLowerCase() === 'admin' ? 'admin' : raw.toUpperCase();
+  const raw   = document.getElementById('emp-id').value.trim();
+  const v     = raw.toLowerCase() === 'admin' ? 'admin' : raw.toUpperCase();
   const errEl = document.getElementById('err-id');
-
   if (!validID(v)) {
     errEl.textContent = 'Enter a valid Employee ID (KN-YYYY-NNN)';
     errEl.classList.add('show');
     document.getElementById('emp-id').classList.add('err');
     return;
   }
-
-  if (v !== ADMIN_ID && !users[v]) {
-    errEl.textContent = 'No Kneuralabs Employee with this ID';
-    errEl.classList.add('show');
-    document.getElementById('emp-id').classList.add('err');
-    return;
-  }
-
   currentID = v;
   document.getElementById('pw-who').textContent = v;
   document.getElementById('pw-input').value = '';
@@ -1386,32 +1266,39 @@ function checkID() {
   setTimeout(() => document.getElementById('pw-input').focus(), 100);
 }
 
-/* ── Password check ── */
-function checkPW() {
-  const pw    = document.getElementById('pw-input').value;
-  const errEl = document.getElementById('err-pw');
-
-  if (currentID === ADMIN_ID && pw === ADMIN_PW) {
+/* ── Password check (now server-side via Supabase RPC) ── */
+async function checkPW() {
+  const pw     = document.getElementById('pw-input').value;
+  const errEl  = document.getElementById('err-pw');
+  const btn    = document.querySelector('#s-pw .btn-primary');
+  btn.disabled = true; btn.textContent = 'Verifying…';
+  try {
+    const result = await rpc('kn_verify_credentials', {
+      p_employee_id: currentID,
+      p_password:    pw,
+    });
+    if (!result.success) {
+      errEl.classList.add('show');
+      document.getElementById('pw-input').classList.add('err');
+      document.getElementById('pw-input').focus();
+      return;
+    }
     errEl.classList.remove('show');
+    currentPw = pw;
     if (redirectUrl && !_redirectWin) _redirectWin = window.open(redirectUrl, '_blank');
-    initAdminToken();
-    refreshUserList();
-    showScreen('s-admin');
-    return;
-  }
-
-  const user = users[currentID];
-  if (user && pw === user.password) {
-    errEl.classList.remove('show');
-    if (redirectUrl && !_redirectWin) _redirectWin = window.open(redirectUrl, '_blank');
-    document.getElementById('dash-name').textContent = 'Welcome, ' + (user.name || currentID) + '.';
-    document.getElementById('dash-id').textContent = currentID;
-    showScreen('s-dash');
-    showToast('Signed in successfully ✓', 'ok');
-  } else {
-    errEl.classList.add('show');
-    document.getElementById('pw-input').classList.add('err');
-    document.getElementById('pw-input').focus();
+    if (result.role === 'admin') {
+      await refreshUserList();
+      showScreen('s-admin');
+    } else {
+      document.getElementById('dash-name').textContent = 'Welcome, ' + result.display_name + '.';
+      document.getElementById('dash-id').textContent   = currentID;
+      showScreen('s-dash');
+      showToast('Signed in successfully ✓', 'ok');
+    }
+  } catch(e) {
+    showToast('Service unavailable. Please try again.', 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign in';
   }
 }
 
@@ -1420,109 +1307,132 @@ async function changePassword() {
   const oldPw  = document.getElementById('old-pw').value;
   const newPw  = document.getElementById('new-pw').value;
   const confPw = document.getElementById('conf-pw').value;
-  const user   = users[currentID];
-  if (oldPw !== ADMIN_PW && !(user && oldPw === user.password)) {
-    document.getElementById('err-old').classList.add('show'); return;
-  }
+  if (newPw !== confPw) { document.getElementById('err-conf').classList.add('show'); return; }
   if (newPw.length < 8) { showToast('Password must be at least 8 characters.', 'err'); return; }
-  if (newPw !== confPw)  { document.getElementById('err-conf').classList.add('show'); return; }
-  if (!users[currentID]) users[currentID] = { name: currentID };
-  users[currentID].password = newPw;
-  document.getElementById('dash-name').textContent = 'Welcome, ' + (users[currentID].name || currentID) + '.';
-  document.getElementById('dash-id').textContent = currentID;
-  showScreen('s-dash');
-  const ok = await saveUsers();
-  showToast(ok ? 'Password updated & database synced ✓' : 'Password updated locally (sync failed)', ok ? 'ok' : 'err');
+  const btn = document.querySelector('#s-change .btn-primary');
+  btn.disabled = true; btn.textContent = 'Updating…';
+  try {
+    const result = await rpc('kn_change_password', {
+      p_employee_id:  currentID,
+      p_old_password: oldPw,
+      p_new_password: newPw,
+    });
+    if (!result.success) {
+      if (result.error === 'invalid_password') document.getElementById('err-old').classList.add('show');
+      else showToast('Password update failed.', 'err');
+      return;
+    }
+    currentPw = newPw;
+    document.getElementById('dash-name').textContent = 'Welcome, ' + currentID + '.';
+    document.getElementById('dash-id').textContent   = currentID;
+    showScreen('s-dash');
+    showToast('Password updated ✓', 'ok');
+  } catch(e) {
+    showToast('Service unavailable. Please try again.', 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Update password & sign in';
+  }
 }
 
 async function changeSelfPassword() {
   const oldPw  = document.getElementById('self-old-pw').value;
   const newPw  = document.getElementById('self-new-pw').value;
   const confPw = document.getElementById('self-conf-pw').value;
-  const user   = users[currentID];
-  if (!user || oldPw !== user.password) { document.getElementById('err-self-old').classList.add('show'); return; }
+  if (newPw !== confPw) { document.getElementById('err-self-conf').classList.add('show'); return; }
   if (newPw.length < 8) { showToast('Password must be at least 8 characters.', 'err'); return; }
-  if (newPw !== confPw)  { document.getElementById('err-self-conf').classList.add('show'); return; }
-  users[currentID].password = newPw;
-  showScreen('s-dash');
-  const ok = await saveUsers();
-  showToast(ok ? 'Password updated & database synced ✓' : 'Password updated locally (sync failed)', ok ? 'ok' : 'err');
+  const btn = document.querySelector('#s-change-self .btn-primary');
+  btn.disabled = true; btn.textContent = 'Updating…';
+  try {
+    const result = await rpc('kn_change_password', {
+      p_employee_id:  currentID,
+      p_old_password: oldPw,
+      p_new_password: newPw,
+    });
+    if (!result.success) { document.getElementById('err-self-old').classList.add('show'); return; }
+    currentPw = newPw;
+    showScreen('s-dash');
+    showToast('Password updated ✓', 'ok');
+  } catch(e) {
+    showToast('Service unavailable. Please try again.', 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Update password';
+  }
 }
 
-/* ── Admin ── */
-function initAdminToken() {
-  const saved  = localStorage.getItem('kn-gh-token') || '';
-  const tinput = document.getElementById('gh-token-input');
-  const status = document.getElementById('db-status');
-  tinput.value    = saved;
-  tinput.disabled = false;
-  status.style.display = 'none';
-}
-
-function refreshUserList() {
-  const el   = document.getElementById('user-list');
-  const keys = Object.keys(users);
-  if (!keys.length) { el.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted)">No users yet.</div>'; return; }
-  el.innerHTML = keys.map(k =>
-    `<div class="user-row" role="listitem">
-      <span>${k}</span>
-      <span style="display:flex;align-items:center;gap:.5rem">
-        <span class="user-badge">${users[k].name || '—'}</span>
-        <button onclick="adminDelete('${k}')" style="background:none;border:none;cursor:pointer;color:var(--kn-red);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Delete user">✕</button>
-      </span>
-    </div>`
-  ).join('');
-}
-
-function markDbSynced() {
-  const status = document.getElementById('db-status');
-  if (!status) return;
-  status.style.display    = 'block';
-  status.style.color      = '#16A34A';
-  status.style.fontWeight = '600';
-  status.textContent      = '✓ Database successfully updated';
+/* ── Admin operations ── */
+async function refreshUserList() {
+  const el = document.getElementById('user-list');
+  try {
+    const result = await rpc('kn_admin_list_users', {
+      p_admin_id: currentID,
+      p_admin_pw: currentPw,
+    });
+    if (!result.success) { el.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted)">Failed to load users.</div>'; return; }
+    const users = result.users;
+    if (!users.length) { el.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted)">No users yet.</div>'; return; }
+    el.innerHTML = users.map(u =>
+      `<div class="user-row" role="listitem">
+        <span>${u.employee_id}</span>
+        <span style="display:flex;align-items:center;gap:.5rem">
+          <span class="user-badge">${u.display_name || '—'}</span>
+          <button onclick="adminReset('${u.employee_id}')" style="background:none;border:none;cursor:pointer;color:var(--kn-slate);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Reset to default password">↺</button>
+          <button onclick="adminDelete('${u.employee_id}')" style="background:none;border:none;cursor:pointer;color:var(--kn-red);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Delete user">✕</button>
+        </span>
+      </div>`
+    ).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted)">Error loading users.</div>';
+  }
 }
 
 async function adminCreate() {
   const id   = document.getElementById('admin-new-id').value.trim().toUpperCase();
   const name = document.getElementById('admin-new-name').value.trim();
   if (!validEmpID(id)) { showToast('Enter a valid Employee ID.', 'err'); return; }
-  const isUpdate = !!users[id];
-  if (isUpdate) {
-    if (name) users[id].name = name;
-  } else {
-    users[id] = { password: DEFAULT_EMP_PW, name: name || id };
-  }
-  document.getElementById('admin-new-id').value   = '';
-  document.getElementById('admin-new-name').value = '';
-  refreshUserList();
-  const ok = await saveUsers();
-  if (ok) markDbSynced();
-  showToast((isUpdate ? 'Updated ' : 'Created ') + id + (ok ? ' & synced ✓' : ' locally (sync failed)'), ok ? 'ok' : 'err');
+  const btn = document.querySelector('#s-admin .btn-primary');
+  btn.disabled = true;
+  try {
+    const result = await rpc('kn_admin_upsert_user', {
+      p_admin_id:     currentID,
+      p_admin_pw:     currentPw,
+      p_employee_id:  id,
+      p_display_name: name || id,
+    });
+    if (!result.success) { showToast('Operation failed: ' + result.error, 'err'); return; }
+    document.getElementById('admin-new-id').value   = '';
+    document.getElementById('admin-new-name').value = '';
+    await refreshUserList();
+    showToast('User saved ✓', 'ok');
+  } catch(e) { showToast('Service unavailable.', 'err');
+  } finally   { btn.disabled = false; }
 }
 
-async function adminDelete(id) {
-  delete users[id];
-  refreshUserList();
-  const ok = await saveUsers();
-  if (ok) markDbSynced();
-  showToast('Deleted ' + id + (ok ? ' & synced ✓' : ' locally (sync failed)'), ok ? 'ok' : 'err');
+async function adminDelete(empId) {
+  try {
+    const result = await rpc('kn_admin_delete_user', {
+      p_admin_id:    currentID,
+      p_admin_pw:    currentPw,
+      p_employee_id: empId,
+    });
+    if (!result.success) { showToast('Delete failed.', 'err'); return; }
+    await refreshUserList();
+    showToast('Deleted ' + empId + ' ✓', 'ok');
+  } catch(e) { showToast('Service unavailable.', 'err'); }
 }
 
-function adminLogout() {
-  currentID = '';
-  document.getElementById('emp-id').value = '';
-  showScreen('s-id');
+async function adminReset(empId) {
+  try {
+    const result = await rpc('kn_admin_reset_password', {
+      p_admin_id:    currentID,
+      p_admin_pw:    currentPw,
+      p_employee_id: empId,
+    });
+    if (!result.success) { showToast('Reset failed.', 'err'); return; }
+    showToast('Password reset to default for ' + empId + ' ✓', 'ok');
+  } catch(e) { showToast('Service unavailable.', 'err'); }
 }
 
-function doLogout() {
-  currentID = '';
-  document.getElementById('emp-id').value   = '';
-  document.getElementById('pw-input').value = '';
-  showScreen('s-id');
-  showToast('Signed out.', 'ok');
-}
-
+/* ── Close helpers ── */
 function doClose() {
   _ssoChannel.postMessage('close');
   _closeThisTab();
@@ -1534,7 +1444,7 @@ function _closeThisTab() {
     if (window.closed) return;
     window.location.replace('about:blank');
     setTimeout(() => {
-      ['btn-close-dash', 'btn-close-admin'].forEach(id => {
+      ['btn-close-dash','btn-close-admin'].forEach(id => {
         const btn = document.getElementById(id);
         if (!btn) return;
         btn.textContent = 'You may close this tab';
@@ -1548,8 +1458,8 @@ function _closeThisTab() {
 /* ── Utilities ── */
 function togglePw(id, btn) {
   const el = document.getElementById(id);
-  if (el.type === 'password') { el.type = 'text'; btn.textContent = 'Hide'; }
-  else { el.type = 'password'; btn.textContent = 'Show'; }
+  if (el.type === 'password') { el.type = 'text';     btn.textContent = 'Hide'; }
+  else                        { el.type = 'password'; btn.textContent = 'Show'; }
 }
 
 function strengthScore(v) {
@@ -1564,14 +1474,14 @@ function strengthScore(v) {
 function applyStrength(v, fillId, labelId) {
   const colors = ['#C8281E','#D97706','#16A34A','#1C5CAA'];
   const labels = ['Weak','Fair','Good','Strong'];
-  const fill  = document.getElementById(fillId);
-  const label = document.getElementById(labelId);
+  const fill   = document.getElementById(fillId);
+  const label  = document.getElementById(labelId);
   if (!v) { fill.style.width = '0%'; label.textContent = ''; return; }
   const s = strengthScore(v);
   fill.style.width      = (s * 25) + '%';
-  fill.style.background = colors[Math.max(s-1,0)];
-  label.textContent     = labels[Math.max(s-1,0)];
-  label.style.color     = colors[Math.max(s-1,0)];
+  fill.style.background = colors[Math.max(s - 1, 0)];
+  label.textContent     = labels[Math.max(s - 1, 0)];
+  label.style.color     = colors[Math.max(s - 1, 0)];
 }
 
 function checkStrength(v)  { applyStrength(v, 'str-fill',  'str-label'); }
@@ -1581,13 +1491,10 @@ let toastTimer;
 function showToast(msg, type) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = 'toast show' + (type === 'err' ? ' err-t' : '');
+  t.className   = 'toast show' + (type === 'err' ? ' err-t' : '');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
 }
-
-/* ── Init ── */
-loadUsers();
 </script>
 </body>
 </html>
