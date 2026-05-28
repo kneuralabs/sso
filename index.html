@@ -1169,15 +1169,20 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 
 <script>
 /* ── Users ── */
-const STORE_KEY  = 'kn-users-v2';
+const STORE_KEY  = 'kn-users-v3';
 const DEFAULT_PW = 'Kneuralabs@2026';
 
 const USERS = {
-  'admin':       { password: 'Kneuralabs@1974', name: 'Administrator', role: 'admin'    },
-  'KN-2026-001': { password: 'Kneuralabs@2026', name: 'Piyal Gupta',   role: 'employee' },
-  'KN-2026-002': { password: 'Kneuralabs@2026', name: 'Piyali Dhar',   role: 'employee' },
-  'KN-2026-003': { password: 'Kneuralabs@2026', name: 'Gautham Dhar',  role: 'employee' },
+  'admin':       { password: '2d7e38d6f21338fad753eb282c54b74c05b48f017674074fce9f33de583d60d4', name: 'Administrator', role: 'admin'    },
+  'KN-2026-001': { password: '71b5dbfbb27c4799097fde2419b63e899746958d00a79584c65862e2434f8a90', name: 'Piyal Gupta',   role: 'employee' },
+  'KN-2026-002': { password: '71b5dbfbb27c4799097fde2419b63e899746958d00a79584c65862e2434f8a90', name: 'Piyali Dhar',   role: 'employee' },
+  'KN-2026-003': { password: '71b5dbfbb27c4799097fde2419b63e899746958d00a79584c65862e2434f8a90', name: 'Gautham Dhar',  role: 'employee' },
 };
+
+async function _sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 function _loadUsers() {
   try { const s = localStorage.getItem(STORE_KEY); return s ? JSON.parse(s) : JSON.parse(JSON.stringify(USERS)); }
@@ -1265,19 +1270,24 @@ function checkID() {
 }
 
 /* ── Password check ── */
-function checkPW() {
+async function checkPW() {
   const pw    = document.getElementById('pw-input').value;
   const errEl = document.getElementById('err-pw');
+  const btn   = document.querySelector('#s-pw .btn-primary');
+  btn.disabled = true; btn.textContent = 'Verifying…';
   const users = _loadUsers();
   const user  = users[currentID];
-  if (!user || user.password !== pw) {
+  const hash  = await _sha256(pw);
+  if (!user || user.password !== hash) {
     errEl.classList.add('show');
     document.getElementById('pw-input').classList.add('err');
     document.getElementById('pw-input').focus();
+    btn.disabled = false; btn.textContent = 'Sign in';
     return;
   }
   errEl.classList.remove('show');
   currentPw = pw;
+  btn.disabled = false; btn.textContent = 'Sign in';
   if (redirectUrl && !_redirectWin) _redirectWin = window.open(redirectUrl, '_blank');
   if (user.role === 'admin') {
     refreshUserList();
@@ -1291,19 +1301,19 @@ function checkPW() {
 }
 
 /* ── Password changes ── */
-function changePassword() {
+async function changePassword() {
   const oldPw  = document.getElementById('old-pw').value;
   const newPw  = document.getElementById('new-pw').value;
   const confPw = document.getElementById('conf-pw').value;
   if (newPw !== confPw) { document.getElementById('err-conf').classList.add('show'); return; }
   if (newPw.length < 8) { showToast('Password must be at least 8 characters.', 'err'); return; }
-  const users = _loadUsers();
-  const user  = users[currentID];
-  const admin = users['admin'];
-  if (user?.password !== oldPw && admin?.password !== oldPw) {
+  const users    = _loadUsers();
+  const user     = users[currentID];
+  const oldHash  = await _sha256(oldPw);
+  if (user?.password !== oldHash && users['admin']?.password !== oldHash) {
     document.getElementById('err-old').classList.add('show'); return;
   }
-  users[currentID].password = newPw;
+  users[currentID].password = await _sha256(newPw);
   _saveUsers(users);
   currentPw = newPw;
   document.getElementById('dash-name').textContent = 'Welcome, ' + (user.name || currentID) + '.';
@@ -1312,18 +1322,19 @@ function changePassword() {
   showToast('Password updated ✓', 'ok');
 }
 
-function changeSelfPassword() {
+async function changeSelfPassword() {
   const oldPw  = document.getElementById('self-old-pw').value;
   const newPw  = document.getElementById('self-new-pw').value;
   const confPw = document.getElementById('self-conf-pw').value;
   if (newPw !== confPw) { document.getElementById('err-self-conf').classList.add('show'); return; }
   if (newPw.length < 8) { showToast('Password must be at least 8 characters.', 'err'); return; }
-  const users = _loadUsers();
-  const user  = users[currentID];
-  if (!user || user.password !== oldPw) {
+  const users   = _loadUsers();
+  const user    = users[currentID];
+  const oldHash = await _sha256(oldPw);
+  if (!user || user.password !== oldHash) {
     document.getElementById('err-self-old').classList.add('show'); return;
   }
-  users[currentID].password = newPw;
+  users[currentID].password = await _sha256(newPw);
   _saveUsers(users);
   currentPw = newPw;
   showScreen('s-dash');
@@ -1348,12 +1359,12 @@ function refreshUserList() {
   ).join('');
 }
 
-function adminCreate() {
+async function adminCreate() {
   const id   = document.getElementById('admin-new-id').value.trim().toUpperCase();
   const name = document.getElementById('admin-new-name').value.trim();
   if (!validEmpID(id)) { showToast('Enter a valid Employee ID.', 'err'); return; }
   const users = _loadUsers();
-  users[id]   = { password: DEFAULT_PW, name: name || id, role: 'employee' };
+  users[id]   = { password: await _sha256(DEFAULT_PW), name: name || id, role: 'employee' };
   _saveUsers(users);
   document.getElementById('admin-new-id').value   = '';
   document.getElementById('admin-new-name').value = '';
@@ -1369,10 +1380,10 @@ function adminDelete(empId) {
   showToast('Deleted ' + empId + ' ✓', 'ok');
 }
 
-function adminReset(empId) {
+async function adminReset(empId) {
   const users = _loadUsers();
   if (!users[empId]) { showToast('User not found.', 'err'); return; }
-  users[empId].password = DEFAULT_PW;
+  users[empId].password = await _sha256(DEFAULT_PW);
   _saveUsers(users);
   showToast('Password reset to default for ' + empId + ' ✓', 'ok');
 }
