@@ -1167,22 +1167,21 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 
 <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
 <script>
-/* ── User store (seeded from DB hashes, overridden by localStorage) ── */
-const STORE_KEY = 'kn-users-v1';
+/* ── Users ── */
+const STORE_KEY  = 'kn-users-v2';
 const DEFAULT_PW = 'Kneuralabs@2026';
 
-const _SEED = {
-  'admin':       { hash: '$2a$12$BvjRbN6QbQJ/0jXRkWNuyuIbXtWjjarT0QOsYAriqNvj/NZBrFx6m', name: 'Administrator', role: 'admin' },
-  'KN-2026-001': { hash: '$2a$12$wXnCgPmtBT0sTVXY0u0dJekfmn5KGu1yP3Z1WzxZUrj9b2y/kUqHu', name: 'Piyal Gupta',   role: 'employee' },
-  'KN-2026-002': { hash: '$2a$12$7yyU26Y66x6HocLQrXXn4uzHi/TR0TtC9ZihyGQuJCEopB8BA9Fti', name: 'Piyali Dhar',   role: 'employee' },
-  'KN-2026-003': { hash: '$2a$12$Va6e.SBHl9Rxbq9tLxEeKOtds10ipq/a6Zvgc1ilIBALDX7CyYPve', name: 'Gautham Dhar',  role: 'employee' },
+const USERS = {
+  'admin':       { password: 'Kneuralabs@2026', name: 'Administrator', role: 'admin'    },
+  'KN-2026-001': { password: 'Kneuralabs@2026', name: 'Piyal Gupta',   role: 'employee' },
+  'KN-2026-002': { password: 'Kneuralabs@2026', name: 'Piyali Dhar',   role: 'employee' },
+  'KN-2026-003': { password: 'Kneuralabs@2026', name: 'Gautham Dhar',  role: 'employee' },
 };
 
 function _loadUsers() {
-  try { const s = localStorage.getItem(STORE_KEY); return s ? JSON.parse(s) : JSON.parse(JSON.stringify(_SEED)); }
-  catch { return JSON.parse(JSON.stringify(_SEED)); }
+  try { const s = localStorage.getItem(STORE_KEY); return s ? JSON.parse(s) : JSON.parse(JSON.stringify(USERS)); }
+  catch { return JSON.parse(JSON.stringify(USERS)); }
 }
 function _saveUsers(u) { localStorage.setItem(STORE_KEY, JSON.stringify(u)); }
 
@@ -1266,94 +1265,69 @@ function checkID() {
 }
 
 /* ── Password check ── */
-async function checkPW() {
+function checkPW() {
   const pw    = document.getElementById('pw-input').value;
   const errEl = document.getElementById('err-pw');
-  const btn   = document.querySelector('#s-pw .btn-primary');
-  btn.disabled = true; btn.textContent = 'Verifying…';
-  try {
-    const users = _loadUsers();
-    const user  = users[currentID];
-    const ok    = user && await bcrypt.compare(pw, user.hash);
-    if (!ok) {
-      errEl.classList.add('show');
-      document.getElementById('pw-input').classList.add('err');
-      document.getElementById('pw-input').focus();
-      return;
-    }
-    errEl.classList.remove('show');
-    currentPw = pw;
-    if (redirectUrl && !_redirectWin) _redirectWin = window.open(redirectUrl, '_blank');
-    if (user.role === 'admin') {
-      refreshUserList();
-      showScreen('s-admin');
-    } else {
-      document.getElementById('dash-name').textContent = 'Welcome, ' + user.name + '.';
-      document.getElementById('dash-id').textContent   = currentID;
-      showScreen('s-dash');
-      showToast('Signed in successfully ✓', 'ok');
-    }
-  } catch(e) {
-    showToast('Error. Please try again.', 'err');
-  } finally {
-    btn.disabled = false; btn.textContent = 'Sign in';
+  const users = _loadUsers();
+  const user  = users[currentID];
+  if (!user || user.password !== pw) {
+    errEl.classList.add('show');
+    document.getElementById('pw-input').classList.add('err');
+    document.getElementById('pw-input').focus();
+    return;
+  }
+  errEl.classList.remove('show');
+  currentPw = pw;
+  if (redirectUrl && !_redirectWin) _redirectWin = window.open(redirectUrl, '_blank');
+  if (user.role === 'admin') {
+    refreshUserList();
+    showScreen('s-admin');
+  } else {
+    document.getElementById('dash-name').textContent = 'Welcome, ' + user.name + '.';
+    document.getElementById('dash-id').textContent   = currentID;
+    showScreen('s-dash');
+    showToast('Signed in successfully ✓', 'ok');
   }
 }
 
 /* ── Password changes ── */
-async function changePassword() {
+function changePassword() {
   const oldPw  = document.getElementById('old-pw').value;
   const newPw  = document.getElementById('new-pw').value;
   const confPw = document.getElementById('conf-pw').value;
   if (newPw !== confPw) { document.getElementById('err-conf').classList.add('show'); return; }
   if (newPw.length < 8) { showToast('Password must be at least 8 characters.', 'err'); return; }
-  const btn = document.querySelector('#s-change .btn-primary');
-  btn.disabled = true; btn.textContent = 'Updating…';
-  try {
-    const users  = _loadUsers();
-    const user   = users[currentID];
-    const admin  = users['admin'];
-    const okSelf  = user  && await bcrypt.compare(oldPw, user.hash);
-    const okAdmin = admin && await bcrypt.compare(oldPw, admin.hash);
-    if (!okSelf && !okAdmin) { document.getElementById('err-old').classList.add('show'); return; }
-    users[currentID].hash = await bcrypt.hash(newPw, 12);
-    _saveUsers(users);
-    currentPw = newPw;
-    document.getElementById('dash-name').textContent = 'Welcome, ' + (user.name || currentID) + '.';
-    document.getElementById('dash-id').textContent   = currentID;
-    showScreen('s-dash');
-    showToast('Password updated ✓', 'ok');
-  } catch(e) {
-    showToast('Error. Please try again.', 'err');
-  } finally {
-    btn.disabled = false; btn.textContent = 'Update password & sign in';
+  const users = _loadUsers();
+  const user  = users[currentID];
+  const admin = users['admin'];
+  if (user?.password !== oldPw && admin?.password !== oldPw) {
+    document.getElementById('err-old').classList.add('show'); return;
   }
+  users[currentID].password = newPw;
+  _saveUsers(users);
+  currentPw = newPw;
+  document.getElementById('dash-name').textContent = 'Welcome, ' + (user.name || currentID) + '.';
+  document.getElementById('dash-id').textContent   = currentID;
+  showScreen('s-dash');
+  showToast('Password updated ✓', 'ok');
 }
 
-async function changeSelfPassword() {
+function changeSelfPassword() {
   const oldPw  = document.getElementById('self-old-pw').value;
   const newPw  = document.getElementById('self-new-pw').value;
   const confPw = document.getElementById('self-conf-pw').value;
   if (newPw !== confPw) { document.getElementById('err-self-conf').classList.add('show'); return; }
   if (newPw.length < 8) { showToast('Password must be at least 8 characters.', 'err'); return; }
-  const btn = document.querySelector('#s-change-self .btn-primary');
-  btn.disabled = true; btn.textContent = 'Updating…';
-  try {
-    const users = _loadUsers();
-    const user  = users[currentID];
-    if (!user || !await bcrypt.compare(oldPw, user.hash)) {
-      document.getElementById('err-self-old').classList.add('show'); return;
-    }
-    users[currentID].hash = await bcrypt.hash(newPw, 12);
-    _saveUsers(users);
-    currentPw = newPw;
-    showScreen('s-dash');
-    showToast('Password updated ✓', 'ok');
-  } catch(e) {
-    showToast('Error. Please try again.', 'err');
-  } finally {
-    btn.disabled = false; btn.textContent = 'Update password';
+  const users = _loadUsers();
+  const user  = users[currentID];
+  if (!user || user.password !== oldPw) {
+    document.getElementById('err-self-old').classList.add('show'); return;
   }
+  users[currentID].password = newPw;
+  _saveUsers(users);
+  currentPw = newPw;
+  showScreen('s-dash');
+  showToast('Password updated ✓', 'ok');
 }
 
 /* ── Admin operations ── */
@@ -1374,23 +1348,17 @@ function refreshUserList() {
   ).join('');
 }
 
-async function adminCreate() {
+function adminCreate() {
   const id   = document.getElementById('admin-new-id').value.trim().toUpperCase();
   const name = document.getElementById('admin-new-name').value.trim();
   if (!validEmpID(id)) { showToast('Enter a valid Employee ID.', 'err'); return; }
-  const btn = document.querySelector('#s-admin .btn-primary');
-  btn.disabled = true;
-  try {
-    const users = _loadUsers();
-    const hash  = await bcrypt.hash(DEFAULT_PW, 12);
-    users[id]   = { hash, name: name || id, role: 'employee' };
-    _saveUsers(users);
-    document.getElementById('admin-new-id').value   = '';
-    document.getElementById('admin-new-name').value = '';
-    refreshUserList();
-    showToast('User saved ✓', 'ok');
-  } catch(e) { showToast('Error.', 'err');
-  } finally   { btn.disabled = false; }
+  const users = _loadUsers();
+  users[id]   = { password: DEFAULT_PW, name: name || id, role: 'employee' };
+  _saveUsers(users);
+  document.getElementById('admin-new-id').value   = '';
+  document.getElementById('admin-new-name').value = '';
+  refreshUserList();
+  showToast('User saved ✓', 'ok');
 }
 
 function adminDelete(empId) {
@@ -1401,10 +1369,10 @@ function adminDelete(empId) {
   showToast('Deleted ' + empId + ' ✓', 'ok');
 }
 
-async function adminReset(empId) {
+function adminReset(empId) {
   const users = _loadUsers();
   if (!users[empId]) { showToast('User not found.', 'err'); return; }
-  users[empId].hash = await bcrypt.hash(DEFAULT_PW, 12);
+  users[empId].password = DEFAULT_PW;
   _saveUsers(users);
   showToast('Password reset to default for ' + empId + ' ✓', 'ok');
 }
