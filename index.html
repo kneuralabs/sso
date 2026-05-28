@@ -1167,33 +1167,32 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 
 <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
 <script>
-/* ── Config ── */
-const SUPA_URL = 'https://brysartqcjylgqwmnjkk.supabase.co';
-const SUPA_KEY = 'sb_publishable_C5e5ViwIlW9dV14ZLi4O0A_ipIXhTB5';
+/* ── User store (seeded from DB hashes, overridden by localStorage) ── */
+const STORE_KEY = 'kn-users-v1';
+const DEFAULT_PW = 'Kneuralabs@2026';
 
-/* ── Supabase RPC helper ── */
-async function rpc(fn, params) {
-  const res = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': SUPA_KEY,
-      'Authorization': 'Bearer ' + SUPA_KEY,
-    },
-    body: JSON.stringify(params),
-  });
-  if (!res.ok) throw new Error(`RPC ${fn} failed: ${res.status}`);
-  return res.json();
+const _SEED = {
+  'admin':       { hash: '$2a$12$BvjRbN6QbQJ/0jXRkWNuyuIbXtWjjarT0QOsYAriqNvj/NZBrFx6m', name: 'Administrator', role: 'admin' },
+  'KN-2026-001': { hash: '$2a$12$wXnCgPmtBT0sTVXY0u0dJekfmn5KGu1yP3Z1WzxZUrj9b2y/kUqHu', name: 'Piyal Gupta',   role: 'employee' },
+  'KN-2026-002': { hash: '$2a$12$7yyU26Y66x6HocLQrXXn4uzHi/TR0TtC9ZihyGQuJCEopB8BA9Fti', name: 'Piyali Dhar',   role: 'employee' },
+  'KN-2026-003': { hash: '$2a$12$Va6e.SBHl9Rxbq9tLxEeKOtds10ipq/a6Zvgc1ilIBALDX7CyYPve', name: 'Gautham Dhar',  role: 'employee' },
+};
+
+function _loadUsers() {
+  try { const s = localStorage.getItem(STORE_KEY); return s ? JSON.parse(s) : JSON.parse(JSON.stringify(_SEED)); }
+  catch { return JSON.parse(JSON.stringify(_SEED)); }
 }
+function _saveUsers(u) { localStorage.setItem(STORE_KEY, JSON.stringify(u)); }
 
-/* ── Session state (in-memory only, never persisted) ── */
-let currentID  = '';
-let currentPw  = '';  // held only for admin ops this session, never stored
+/* ── Session state ── */
+let currentID = '';
+let currentPw = '';
 
-const _params      = new URLSearchParams(window.location.search);
-const redirectUrl  = _params.get('redirect') || _params.get('next') || _params.get('returnUrl') || _params.get('continue') || '';
-let   _redirectWin = null;
+const _params     = new URLSearchParams(window.location.search);
+const redirectUrl = _params.get('redirect') || _params.get('next') || _params.get('returnUrl') || _params.get('continue') || '';
+let _redirectWin  = null;
 
 const _ssoChannel = new BroadcastChannel('kn-sso-close');
 _ssoChannel.onmessage = () => _closeThisTab();
@@ -1266,18 +1265,17 @@ function checkID() {
   setTimeout(() => document.getElementById('pw-input').focus(), 100);
 }
 
-/* ── Password check (now server-side via Supabase RPC) ── */
+/* ── Password check ── */
 async function checkPW() {
-  const pw     = document.getElementById('pw-input').value;
-  const errEl  = document.getElementById('err-pw');
-  const btn    = document.querySelector('#s-pw .btn-primary');
+  const pw    = document.getElementById('pw-input').value;
+  const errEl = document.getElementById('err-pw');
+  const btn   = document.querySelector('#s-pw .btn-primary');
   btn.disabled = true; btn.textContent = 'Verifying…';
   try {
-    const result = await rpc('kn_verify_credentials', {
-      p_employee_id: currentID,
-      p_password:    pw,
-    });
-    if (!result.success) {
+    const users = _loadUsers();
+    const user  = users[currentID];
+    const ok    = user && await bcrypt.compare(pw, user.hash);
+    if (!ok) {
       errEl.classList.add('show');
       document.getElementById('pw-input').classList.add('err');
       document.getElementById('pw-input').focus();
@@ -1286,17 +1284,17 @@ async function checkPW() {
     errEl.classList.remove('show');
     currentPw = pw;
     if (redirectUrl && !_redirectWin) _redirectWin = window.open(redirectUrl, '_blank');
-    if (result.role === 'admin') {
-      await refreshUserList();
+    if (user.role === 'admin') {
+      refreshUserList();
       showScreen('s-admin');
     } else {
-      document.getElementById('dash-name').textContent = 'Welcome, ' + result.display_name + '.';
+      document.getElementById('dash-name').textContent = 'Welcome, ' + user.name + '.';
       document.getElementById('dash-id').textContent   = currentID;
       showScreen('s-dash');
       showToast('Signed in successfully ✓', 'ok');
     }
   } catch(e) {
-    showToast('Service unavailable. Please try again.', 'err');
+    showToast('Error. Please try again.', 'err');
   } finally {
     btn.disabled = false; btn.textContent = 'Sign in';
   }
@@ -1312,23 +1310,21 @@ async function changePassword() {
   const btn = document.querySelector('#s-change .btn-primary');
   btn.disabled = true; btn.textContent = 'Updating…';
   try {
-    const result = await rpc('kn_change_password', {
-      p_employee_id:  currentID,
-      p_old_password: oldPw,
-      p_new_password: newPw,
-    });
-    if (!result.success) {
-      if (result.error === 'invalid_password') document.getElementById('err-old').classList.add('show');
-      else showToast('Password update failed.', 'err');
-      return;
-    }
+    const users  = _loadUsers();
+    const user   = users[currentID];
+    const admin  = users['admin'];
+    const okSelf  = user  && await bcrypt.compare(oldPw, user.hash);
+    const okAdmin = admin && await bcrypt.compare(oldPw, admin.hash);
+    if (!okSelf && !okAdmin) { document.getElementById('err-old').classList.add('show'); return; }
+    users[currentID].hash = await bcrypt.hash(newPw, 12);
+    _saveUsers(users);
     currentPw = newPw;
-    document.getElementById('dash-name').textContent = 'Welcome, ' + currentID + '.';
+    document.getElementById('dash-name').textContent = 'Welcome, ' + (user.name || currentID) + '.';
     document.getElementById('dash-id').textContent   = currentID;
     showScreen('s-dash');
     showToast('Password updated ✓', 'ok');
   } catch(e) {
-    showToast('Service unavailable. Please try again.', 'err');
+    showToast('Error. Please try again.', 'err');
   } finally {
     btn.disabled = false; btn.textContent = 'Update password & sign in';
   }
@@ -1343,46 +1339,39 @@ async function changeSelfPassword() {
   const btn = document.querySelector('#s-change-self .btn-primary');
   btn.disabled = true; btn.textContent = 'Updating…';
   try {
-    const result = await rpc('kn_change_password', {
-      p_employee_id:  currentID,
-      p_old_password: oldPw,
-      p_new_password: newPw,
-    });
-    if (!result.success) { document.getElementById('err-self-old').classList.add('show'); return; }
+    const users = _loadUsers();
+    const user  = users[currentID];
+    if (!user || !await bcrypt.compare(oldPw, user.hash)) {
+      document.getElementById('err-self-old').classList.add('show'); return;
+    }
+    users[currentID].hash = await bcrypt.hash(newPw, 12);
+    _saveUsers(users);
     currentPw = newPw;
     showScreen('s-dash');
     showToast('Password updated ✓', 'ok');
   } catch(e) {
-    showToast('Service unavailable. Please try again.', 'err');
+    showToast('Error. Please try again.', 'err');
   } finally {
     btn.disabled = false; btn.textContent = 'Update password';
   }
 }
 
 /* ── Admin operations ── */
-async function refreshUserList() {
-  const el = document.getElementById('user-list');
-  try {
-    const result = await rpc('kn_admin_list_users', {
-      p_admin_id: currentID,
-      p_admin_pw: currentPw,
-    });
-    if (!result.success) { el.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted)">Failed to load users.</div>'; return; }
-    const users = result.users;
-    if (!users.length) { el.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted)">No users yet.</div>'; return; }
-    el.innerHTML = users.map(u =>
-      `<div class="user-row" role="listitem">
-        <span>${u.employee_id}</span>
-        <span style="display:flex;align-items:center;gap:.5rem">
-          <span class="user-badge">${u.display_name || '—'}</span>
-          <button onclick="adminReset('${u.employee_id}')" style="background:none;border:none;cursor:pointer;color:var(--kn-slate);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Reset to default password">↺</button>
-          <button onclick="adminDelete('${u.employee_id}')" style="background:none;border:none;cursor:pointer;color:var(--kn-red);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Delete user">✕</button>
-        </span>
-      </div>`
-    ).join('');
-  } catch(e) {
-    el.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted)">Error loading users.</div>';
-  }
+function refreshUserList() {
+  const users = _loadUsers();
+  const el    = document.getElementById('user-list');
+  const rows  = Object.entries(users).filter(([id]) => id !== 'admin');
+  if (!rows.length) { el.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted)">No users yet.</div>'; return; }
+  el.innerHTML = rows.map(([id, u]) =>
+    `<div class="user-row" role="listitem">
+      <span>${id}</span>
+      <span style="display:flex;align-items:center;gap:.5rem">
+        <span class="user-badge">${u.name || '—'}</span>
+        <button onclick="adminReset('${id}')" style="background:none;border:none;cursor:pointer;color:var(--kn-slate);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Reset to default password">↺</button>
+        <button onclick="adminDelete('${id}')" style="background:none;border:none;cursor:pointer;color:var(--kn-red);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Delete user">✕</button>
+      </span>
+    </div>`
+  ).join('');
 }
 
 async function adminCreate() {
@@ -1392,44 +1381,32 @@ async function adminCreate() {
   const btn = document.querySelector('#s-admin .btn-primary');
   btn.disabled = true;
   try {
-    const result = await rpc('kn_admin_upsert_user', {
-      p_admin_id:     currentID,
-      p_admin_pw:     currentPw,
-      p_employee_id:  id,
-      p_display_name: name || id,
-    });
-    if (!result.success) { showToast('Operation failed: ' + result.error, 'err'); return; }
+    const users = _loadUsers();
+    const hash  = await bcrypt.hash(DEFAULT_PW, 12);
+    users[id]   = { hash, name: name || id, role: 'employee' };
+    _saveUsers(users);
     document.getElementById('admin-new-id').value   = '';
     document.getElementById('admin-new-name').value = '';
-    await refreshUserList();
+    refreshUserList();
     showToast('User saved ✓', 'ok');
-  } catch(e) { showToast('Service unavailable.', 'err');
+  } catch(e) { showToast('Error.', 'err');
   } finally   { btn.disabled = false; }
 }
 
-async function adminDelete(empId) {
-  try {
-    const result = await rpc('kn_admin_delete_user', {
-      p_admin_id:    currentID,
-      p_admin_pw:    currentPw,
-      p_employee_id: empId,
-    });
-    if (!result.success) { showToast('Delete failed.', 'err'); return; }
-    await refreshUserList();
-    showToast('Deleted ' + empId + ' ✓', 'ok');
-  } catch(e) { showToast('Service unavailable.', 'err'); }
+function adminDelete(empId) {
+  const users = _loadUsers();
+  delete users[empId];
+  _saveUsers(users);
+  refreshUserList();
+  showToast('Deleted ' + empId + ' ✓', 'ok');
 }
 
 async function adminReset(empId) {
-  try {
-    const result = await rpc('kn_admin_reset_password', {
-      p_admin_id:    currentID,
-      p_admin_pw:    currentPw,
-      p_employee_id: empId,
-    });
-    if (!result.success) { showToast('Reset failed.', 'err'); return; }
-    showToast('Password reset to default for ' + empId + ' ✓', 'ok');
-  } catch(e) { showToast('Service unavailable.', 'err'); }
+  const users = _loadUsers();
+  if (!users[empId]) { showToast('User not found.', 'err'); return; }
+  users[empId].hash = await bcrypt.hash(DEFAULT_PW, 12);
+  _saveUsers(users);
+  showToast('Password reset to default for ' + empId + ' ✓', 'ok');
 }
 
 /* ── Close helpers ── */
