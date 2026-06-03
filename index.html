@@ -1344,7 +1344,7 @@ async function checkPW() {
   errEl.classList.remove('show');
   currentPw = pw;
   btn.disabled = false; btn.textContent = 'Sign in';
-  if (redirectUrl && !_redirectWin) _redirectWin = window.open(redirectUrl, '_blank');
+  if (redirectUrl && !_redirectWin) { const _rDest = new URL(redirectUrl, location.href); _rDest.searchParams.set('kn-auth','1'); _redirectWin = window.open(_rDest.toString(), '_blank'); }
   if (user.role === 'admin') {
     refreshUserList();
     showScreen('s-admin');
