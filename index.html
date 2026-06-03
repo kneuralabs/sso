@@ -1169,8 +1169,9 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 
 <script>
 /* ── Users ── */
-const STORE_KEY  = 'kn-users-v3';
-const DEFAULT_PW = 'Kneuralabs@2026';
+const STORE_KEY    = 'kn-users-v3';        // legacy full-snapshot store (migrated away from)
+const OVERRIDE_KEY = 'kn-users-overrides-v1'; // persists ONLY deltas on top of the code-defined seed
+const DEFAULT_PW   = 'Kneuralabs@2026';
 
 const USERS = {
   'admin':       { password: '2d7e38d6f21338fad753eb282c54b74c05b48f017674074fce9f33de583d60d4', name: 'Administrator', role: 'admin'    },
@@ -1184,11 +1185,66 @@ async function _sha256(str) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-function _loadUsers() {
-  try { const s = localStorage.getItem(STORE_KEY); return s ? JSON.parse(s) : JSON.parse(JSON.stringify(USERS)); }
-  catch { return JSON.parse(JSON.stringify(USERS)); }
+/* Persistence model — overrides on top of the code-defined seed.
+ *
+ * The user store is the merge of two layers:
+ *   1. USERS          — the seed defined in this file. Always the source of truth
+ *                       for which accounts exist by default. Shipping a new hire in
+ *                       a deploy must reach every browser, even returning ones.
+ *   2. local overrides — ONLY the deltas a browser has made (password changes,
+ *                       admin-created users, renames, deletions). Never a full
+ *                       snapshot, so it can never shadow a freshly-seeded account.
+ *
+ * Storing full snapshots (the previous behaviour) froze the seed at the moment of
+ * the first write: any account added to USERS in a later deploy became invisible to
+ * any browser that had ever touched the store, and resetting required hand-bumping
+ * STORE_KEY (which also wiped every real change). Persisting deltas removes both.
+ */
+function _readOverrides() {
+  // One-time migration: fold any legacy full snapshot into the delta model.
+  const legacy = localStorage.getItem(STORE_KEY);
+  if (legacy !== null) {
+    // A legacy snapshot is stale: a seed account absent from it may simply not
+    // have existed yet, so we must NOT infer deletions from it (detectDeletes=false).
+    try { _writeOverrides(_diffOverrides(JSON.parse(legacy), false)); } catch {}
+    localStorage.removeItem(STORE_KEY);
+  }
+  try { return JSON.parse(localStorage.getItem(OVERRIDE_KEY) || '{}') || {}; }
+  catch { return {}; }
 }
-function _saveUsers(u) { localStorage.setItem(STORE_KEY, JSON.stringify(u)); }
+function _writeOverrides(ov) { localStorage.setItem(OVERRIDE_KEY, JSON.stringify(ov)); }
+
+/* Reduce a full user map to only what differs from the seed.
+ * detectDeletes: treat a seed account missing from `u` as an intentional deletion.
+ * Safe for a live in-memory map (always built from the current seed); must be off
+ * for a stale legacy snapshot, where a missing seed account may just be newer. */
+function _diffOverrides(u, detectDeletes = true) {
+  const ov = {};
+  for (const [id, rec] of Object.entries(u || {})) {
+    const seed = USERS[id];
+    if (!seed) { ov[id] = rec; continue; }                 // admin-created account
+    const d = {};
+    for (const k of ['password', 'name', 'role'])
+      if (rec[k] !== seed[k]) d[k] = rec[k];
+    if (Object.keys(d).length) ov[id] = d;                 // mutated seed account
+  }
+  if (detectDeletes)
+    for (const id of Object.keys(USERS))
+      if (!(id in (u || {}))) ov[id] = { deleted: true };  // deleted seed account
+  return ov;
+}
+
+function _loadUsers() {
+  const out = JSON.parse(JSON.stringify(USERS));           // fresh seed every load
+  const ov  = _readOverrides();
+  for (const [id, rec] of Object.entries(ov)) {
+    if (rec && rec.deleted) { delete out[id]; continue; }
+    out[id] = Object.assign(out[id] || {}, rec);
+  }
+  return out;
+}
+
+function _saveUsers(u) { _writeOverrides(_diffOverrides(u)); }
 
 /* ── Session state ── */
 let currentID = '';
