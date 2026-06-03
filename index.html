@@ -1344,6 +1344,7 @@ async function checkPW() {
   errEl.classList.remove('show');
   currentPw = pw;
   btn.disabled = false; btn.textContent = 'Sign in';
+  if (redirectUrl === 'postmessage') { window.parent.postMessage({type:'kn-auth',id:currentID,name:user.name,role:user.role}, '*'); return; }
   if (redirectUrl && !_redirectWin) { const _rDest = new URL(redirectUrl, location.href); _rDest.searchParams.set('kn-auth', btoa(JSON.stringify({id:currentID,name:user.name,role:user.role}))); _redirectWin = window.open(_rDest.toString(), '_blank'); }
   if (user.role === 'admin') {
     refreshUserList();
