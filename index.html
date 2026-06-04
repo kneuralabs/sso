@@ -1057,13 +1057,16 @@ const SB_URL = 'https://brysartqcjylgqwmnjkk.supabase.co';
 const SB_KEY = 'sb_publishable_C5e5ViwIlW9dV14ZLi4O0A_ipIXhTB5';
 const _sbHeaders = { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' };
 
-// Fetch granted app ids for one user. Returns array, or null if unreachable.
+// Fetch granted app ids for one user. Returns the array when a grant row
+// exists, or null when there is no row / the backend is unreachable — letting
+// callers fall back to the local copy instead of treating it as "zero apps".
 async function _remoteGetApps(empId) {
   try {
     const r = await fetch(SB_URL + '/rest/v1/kn_app_access?select=apps&employee_id=eq.' + encodeURIComponent(empId), { headers: _sbHeaders });
     if (!r.ok) return null;
     const rows = await r.json();
-    return rows.length && Array.isArray(rows[0].apps) ? rows[0].apps : [];
+    if (!rows.length) return null;
+    return Array.isArray(rows[0].apps) ? rows[0].apps : [];
   } catch { return null; }
 }
 
@@ -1094,6 +1097,19 @@ async function _remoteDeleteApps(empId) {
   try {
     await fetch(SB_URL + '/rest/v1/kn_app_access?employee_id=eq.' + encodeURIComponent(empId), { method: 'DELETE', headers: _sbHeaders });
   } catch {}
+}
+
+// One-time migration: push any grants that exist only in this admin browser's
+// localStorage up to the shared backend, for users that have no row yet. This
+// recovers pre-Supabase selections automatically — no manual re-save needed.
+async function _syncLocalGrantsToRemote() {
+  const users  = _loadUsers();
+  const remote = await _remoteGetAllApps();
+  for (const [id, u] of Object.entries(users)) {
+    if (id === 'admin') continue;
+    if (Array.isArray(u.apps) && u.apps.length && !(id in remote))
+      await _remoteSetApps(id, u.apps);
+  }
 }
 
 // Only these origins may receive an SSO auth token (redirect or postMessage).
@@ -1269,6 +1285,7 @@ async function checkPW() {
     return;
   }
   if (user.role === 'admin') {
+    await _syncLocalGrantsToRemote();
     refreshUserList();
     showScreen('s-admin');
   } else {
