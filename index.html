@@ -1049,6 +1049,28 @@ function _loadUsers() {
 
 function _saveUsers(u) { _writeOverrides(_diffOverrides(u)); }
 
+// Only these origins may receive an SSO auth token (redirect or postMessage).
+// Prevents open-redirect token exfiltration and cross-origin postMessage leaks.
+function _isTrustedOrigin(origin) {
+  try {
+    const u = new URL(origin);
+    if (u.origin === location.origin) return true;
+    if (u.protocol === 'https:' &&
+        (u.hostname === 'kneuralabs.com' || u.hostname.endsWith('.kneuralabs.com'))) return true;
+    if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') return true; // local dev
+    return false;
+  } catch { return false; }
+}
+
+// UTF-8-safe base64: btoa() only accepts Latin1 (code points 0-255) and throws
+// on names containing non-Latin scripts or emoji, which silently aborts redirect.
+function _encodeAuth(payload) {
+  const bytes = new TextEncoder().encode(JSON.stringify(payload));
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
 let currentID = '';
 let currentPw = '';
 
@@ -1180,8 +1202,21 @@ async function checkPW() {
   errEl.classList.remove('show');
   currentPw = pw;
   btn.disabled = false; btn.textContent = 'Sign in';
-  if (redirectUrl === 'postmessage') { window.parent.postMessage({type:'kn-auth',id:currentID,name:user.name,role:user.role,apps:user.apps||[]}, '*'); return; }
-  if (redirectUrl) { const _rDest = new URL(redirectUrl, location.href); _rDest.searchParams.set('kn-auth', btoa(JSON.stringify({id:currentID,name:user.name,role:user.role,apps:user.apps||[]}))); location.replace(_rDest.toString()); return; }
+  const _authPayload = {id:currentID,name:user.name,role:user.role,apps:user.apps||[]};
+  if (redirectUrl === 'postmessage') {
+    // Target the embedding parent's origin explicitly — never '*'.
+    const parentOrigin = _params.get('origin') || (document.referrer ? new URL(document.referrer).origin : '');
+    if (!_isTrustedOrigin(parentOrigin)) { showToast('This site is not authorised to receive sign-in.', 'err'); return; }
+    window.parent.postMessage({type:'kn-auth', ..._authPayload}, parentOrigin);
+    return;
+  }
+  if (redirectUrl) {
+    const _rDest = new URL(redirectUrl, location.href);
+    if (!_isTrustedOrigin(_rDest.origin)) { showToast('Sign-in destination is not authorised.', 'err'); return; }
+    _rDest.searchParams.set('kn-auth', _encodeAuth(_authPayload));
+    location.replace(_rDest.toString());
+    return;
+  }
   if (user.role === 'admin') {
     refreshUserList();
     showScreen('s-admin');
@@ -1202,10 +1237,13 @@ async function changePassword() {
   const users    = _loadUsers();
   const user     = users[currentID];
   const oldHash  = await _sha256(oldPw);
-  if (user?.password !== oldHash && users['admin']?.password !== oldHash) {
+  // Require the account's OWN current password. The previous admin-password
+  // fallback here was a pre-auth backdoor: anyone knowing the admin password
+  // could take over any account from the public "Set your password" screen.
+  if (!user || user.password !== oldHash) {
     document.getElementById('err-old').classList.add('show'); return;
   }
-  users[currentID].password = await _sha256(newPw);
+  user.password = await _sha256(newPw);
   _saveUsers(users);
   currentPw = newPw;
   document.getElementById('dash-name').textContent = 'Welcome, ' + (user.name || currentID) + '.';
