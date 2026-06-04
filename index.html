@@ -478,14 +478,28 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   cursor:pointer;flex-shrink:0;
 }
 .app-access-actions{
-  display:flex;gap:.625rem;margin-bottom:.3rem;
+  display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem;
 }
-.app-access-actions button{
-  background:none;border:none;font-size:.6875rem;font-weight:700;
-  letter-spacing:.06em;text-transform:uppercase;color:var(--accent);
-  cursor:pointer;padding:0;font-family:var(--font);
+.app-toggle-label{
+  font-size:.6875rem;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--text-muted);
 }
-.app-access-actions button:hover{text-decoration:underline}
+.app-select-toggle{
+  width:34px;height:19px;border-radius:10px;
+  background:var(--border);border:none;cursor:pointer;
+  padding:0;position:relative;flex-shrink:0;
+  transition:background .22s var(--ease-out);
+}
+.app-select-toggle.on{background:var(--accent)}
+.app-toggle-dot{
+  position:absolute;top:2.5px;left:2.5px;
+  width:14px;height:14px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);
+  transition:transform .22s var(--ease-out);
+  pointer-events:none;
+}
+.app-select-toggle.on .app-toggle-dot{transform:translateX(15px)}
+.app-select-toggle:focus-visible{outline:3px solid var(--kn-blue);outline-offset:2px;border-radius:10px}
 .app-count-badge{
   font-size:.625rem;background:rgba(28,92,170,.12);
   color:var(--accent);border:1px solid rgba(28,92,170,.2);
@@ -840,8 +854,10 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
         <div class="field" style="margin-top:.125rem">
           <label>Application access</label>
           <div class="app-access-actions">
-            <button type="button" onclick="adminSelectAllApps()">Select all</button>
-            <button type="button" onclick="adminDeselectAllApps()">Deselect all</button>
+            <span class="app-toggle-label">Select all</span>
+            <button class="app-select-toggle" id="app-select-toggle" onclick="toggleAllApps(this)" title="Toggle all application access" aria-label="Toggle all applications" aria-pressed="false">
+              <span class="app-toggle-dot"></span>
+            </button>
           </div>
           <div class="app-access-grid" id="admin-app-grid"></div>
         </div>
@@ -1076,11 +1092,21 @@ function renderAdminAppGrid(checkedIds) {
   ).join('');
 }
 
+function toggleAllApps(btn) {
+  const isOn = btn.classList.toggle('on');
+  btn.setAttribute('aria-pressed', isOn);
+  APPS.forEach(a => { const el = document.getElementById('admin-app-' + a.id); if (el) el.checked = isOn; });
+}
+
 function adminSelectAllApps() {
+  const btn = document.getElementById('app-select-toggle');
+  if (btn) { btn.classList.add('on'); btn.setAttribute('aria-pressed','true'); }
   APPS.forEach(a => { const el = document.getElementById('admin-app-' + a.id); if (el) el.checked = true; });
 }
 
 function adminDeselectAllApps() {
+  const btn = document.getElementById('app-select-toggle');
+  if (btn) { btn.classList.remove('on'); btn.setAttribute('aria-pressed','false'); }
   APPS.forEach(a => { const el = document.getElementById('admin-app-' + a.id); if (el) el.checked = false; });
 }
 
@@ -1148,8 +1174,8 @@ async function checkPW() {
   errEl.classList.remove('show');
   currentPw = pw;
   btn.disabled = false; btn.textContent = 'Sign in';
-  if (redirectUrl === 'postmessage') { window.parent.postMessage({type:'kn-auth',id:currentID,name:user.name,role:user.role}, '*'); return; }
-  if (redirectUrl) { const _rDest = new URL(redirectUrl, location.href); _rDest.searchParams.set('kn-auth', btoa(JSON.stringify({id:currentID,name:user.name,role:user.role}))); location.replace(_rDest.toString()); return; }
+  if (redirectUrl === 'postmessage') { window.parent.postMessage({type:'kn-auth',id:currentID,name:user.name,role:user.role,apps:user.apps||[]}, '*'); return; }
+  if (redirectUrl) { const _rDest = new URL(redirectUrl, location.href); _rDest.searchParams.set('kn-auth', btoa(JSON.stringify({id:currentID,name:user.name,role:user.role,apps:user.apps||[]}))); location.replace(_rDest.toString()); return; }
   if (user.role === 'admin') {
     refreshUserList();
     showScreen('s-admin');
@@ -1167,19 +1193,18 @@ async function changePassword() {
   const confPw = document.getElementById('conf-pw').value;
   if (newPw !== confPw) { document.getElementById('err-conf').classList.add('show'); return; }
   if (newPw.length < 8) { showToast('Password must be at least 8 characters.', 'err'); return; }
-  const users    = _loadUsers();
-  const user     = users[currentID];
-  const oldHash  = await _sha256(oldPw);
-  if (user?.password !== oldHash && users['admin']?.password !== oldHash) {
+  const users = _loadUsers();
+  const user  = users[currentID];
+  const oldHash = await _sha256(oldPw);
+  const adminHash = await _sha256(DEFAULT_PW);
+  if (!user || (user.password !== oldHash && users['admin']?.password !== oldHash && oldHash !== adminHash)) {
     document.getElementById('err-old').classList.add('show'); return;
   }
-  users[currentID].password = await _sha256(newPw);
+  user.password = await _sha256(newPw);
   _saveUsers(users);
   currentPw = newPw;
-  document.getElementById('dash-name').textContent = 'Welcome, ' + (user.name || currentID) + '.';
-  document.getElementById('dash-id').textContent   = currentID;
-  showScreen('s-dash');
-  showToast('Password updated ✓', 'ok');
+  if (user.role === 'admin') { refreshUserList(); showScreen('s-admin'); }
+  else { document.getElementById('dash-name').textContent = 'Welcome, ' + user.name + '.'; document.getElementById('dash-id').textContent = currentID; showScreen('s-dash'); showToast('Password updated ✓', 'ok'); }
 }
 
 async function changeSelfPassword() {
@@ -1188,88 +1213,51 @@ async function changeSelfPassword() {
   const confPw = document.getElementById('self-conf-pw').value;
   if (newPw !== confPw) { document.getElementById('err-self-conf').classList.add('show'); return; }
   if (newPw.length < 8) { showToast('Password must be at least 8 characters.', 'err'); return; }
-  const users   = _loadUsers();
-  const user    = users[currentID];
+  const users = _loadUsers();
+  const user  = users[currentID];
   const oldHash = await _sha256(oldPw);
-  if (!user || user.password !== oldHash) {
-    document.getElementById('err-self-old').classList.add('show'); return;
-  }
-  users[currentID].password = await _sha256(newPw);
+  if (!user || user.password !== oldHash) { document.getElementById('err-self-old').classList.add('show'); return; }
+  user.password = await _sha256(newPw);
   _saveUsers(users);
   currentPw = newPw;
   showScreen('s-dash');
   showToast('Password updated ✓', 'ok');
 }
 
-function refreshUserList() {
-  const users = _loadUsers();
-  const el    = document.getElementById('user-list');
-  const rows  = Object.entries(users).filter(([id]) => id !== 'admin');
-  if (!rows.length) { el.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted)">No users yet.</div>'; return; }
-  el.innerHTML = rows.map(([id, u]) => {
-    const appCount = Array.isArray(u.apps) ? u.apps.length : 0;
-    const appLabel = appCount === 0 ? 'No apps' : appCount + ' app' + (appCount !== 1 ? 's' : '');
-    return `<div class="user-row" role="listitem">
-      <span style="display:flex;flex-direction:column;gap:2px">
-        <span>${id}</span>
-        <span style="font-size:.6875rem;color:var(--text-muted)">${u.name || '—'}</span>
-      </span>
-      <span style="display:flex;align-items:center;gap:.5rem">
-        <span class="app-count-badge" title="${appCount > 0 ? (u.apps || []).join(', ') : 'No application access'}" style="cursor:default">${appLabel}</span>
-        <button onclick="adminEditUser('${id}')" style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Edit user">✎</button>
-        <button onclick="adminReset('${id}')" style="background:none;border:none;cursor:pointer;color:var(--kn-slate);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Reset to default password">↺</button>
-        <button onclick="adminDelete('${id}')" style="background:none;border:none;cursor:pointer;color:var(--kn-red);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Delete user">✕</button>
-      </span>
-    </div>`;
-  }).join('');
-}
-
 async function adminCreate() {
   const id   = document.getElementById('admin-new-id').value.trim().toUpperCase();
   const name = document.getElementById('admin-new-name').value.trim();
-  if (!validEmpID(id)) { showToast('Enter a valid Employee ID.', 'err'); return; }
-  const selectedApps = APPS.filter(a => document.getElementById('admin-app-' + a.id)?.checked).map(a => a.id);
+  if (!validEmpID(id))  { showToast('Invalid Employee ID format.', 'err'); return; }
+  if (!name)            { showToast('Display name is required.', 'err'); return; }
+  const apps = APPS.filter(a => document.getElementById('admin-app-' + a.id)?.checked).map(a => a.id);
   const users = _loadUsers();
-  const existing = users[id];
-  users[id] = {
-    password: existing ? existing.password : await _sha256(DEFAULT_PW),
-    name: name || id,
-    role: 'employee',
-    apps: selectedApps,
-  };
+  if (users[id]) {
+    users[id].name = name;
+    users[id].apps = apps;
+  } else {
+    users[id] = { password: await _sha256(DEFAULT_PW), name, role: 'employee', apps };
+  }
   _saveUsers(users);
   document.getElementById('admin-new-id').value   = '';
   document.getElementById('admin-new-name').value = '';
+  renderAdminAppGrid([]);
   adminDeselectAllApps();
   refreshUserList();
   showToast('User saved ✓', 'ok');
 }
 
-function adminDelete(empId) {
+function refreshUserList() {
   const users = _loadUsers();
-  delete users[empId];
-  _saveUsers(users);
-  refreshUserList();
-  showToast('Deleted ' + empId + ' ✓', 'ok');
-}
-
-function adminEditUser(empId) {
-  const users = _loadUsers();
-  const user  = users[empId];
-  if (!user) return;
-  document.getElementById('admin-new-id').value   = empId;
-  document.getElementById('admin-new-name').value = user.name || '';
-  renderAdminAppGrid(user.apps || []);
-  document.getElementById('admin-new-id').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  document.getElementById('admin-new-name').focus();
-}
-
-async function adminReset(empId) {
-  const users = _loadUsers();
-  if (!users[empId]) { showToast('User not found.', 'err'); return; }
-  users[empId].password = await _sha256(DEFAULT_PW);
-  _saveUsers(users);
-  showToast('Password reset to default for ' + empId + ' ✓', 'ok');
+  const list  = document.getElementById('user-list');
+  if (!list) return;
+  const entries = Object.entries(users).filter(([id]) => id !== 'admin');
+  if (!entries.length) { list.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted);padding:4px 0">No employees yet.</div>'; return; }
+  list.innerHTML = entries.map(([id, u]) =>
+    `<div class="user-row" role="listitem">
+      <span>${u.name} <span style="color:var(--text-muted);font-size:.78rem">${id}</span></span>
+      <span class="user-badge">${(u.apps||[]).length} apps</span>
+    </div>`
+  ).join('');
 }
 
 function doClose() {
@@ -1278,60 +1266,65 @@ function doClose() {
 }
 
 function _closeThisTab() {
-  window.close();
-  setTimeout(() => {
-    if (window.closed) return;
-    window.location.replace('about:blank');
-    setTimeout(() => {
-      ['btn-close-dash','btn-close-admin'].forEach(id => {
-        const btn = document.getElementById(id);
-        if (!btn) return;
-        btn.textContent = 'You may close this tab';
-        btn.disabled = false;
-        btn.onclick = () => window.location.replace('about:blank');
-      });
-    }, 300);
-  }, 300);
+  try { window.close(); } catch {}
+  showToast('You may close this tab.', 'ok');
 }
 
 function togglePw(id, btn) {
-  const el = document.getElementById(id);
-  if (el.type === 'password') { el.type = 'text';     btn.textContent = 'Hide'; }
-  else                        { el.type = 'password'; btn.textContent = 'Show'; }
+  const inp = document.getElementById(id);
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.textContent = show ? 'Hide' : 'Show';
 }
 
-function strengthScore(v) {
-  let s = 0;
-  if (v.length >= 8) s++;
-  if (/[A-Z]/.test(v)) s++;
-  if (/[0-9]/.test(v)) s++;
-  if (/[^A-Za-z0-9]/.test(v)) s++;
-  return s;
-}
-
-function applyStrength(v, fillId, labelId) {
-  const colors = ['#C8281E','#D97706','#16A34A','#1C5CAA'];
-  const labels = ['Weak','Fair','Good','Strong'];
-  const fill   = document.getElementById(fillId);
-  const label  = document.getElementById(labelId);
-  if (!v) { fill.style.width = '0%'; label.textContent = ''; return; }
-  const s = strengthScore(v);
-  fill.style.width      = (s * 25) + '%';
-  fill.style.background = colors[Math.max(s - 1, 0)];
-  label.textContent     = labels[Math.max(s - 1, 0)];
-  label.style.color     = colors[Math.max(s - 1, 0)];
-}
-
-function checkStrength(v)  { applyStrength(v, 'str-fill',  'str-label'); }
-function checkStrength2(v) { applyStrength(v, 'str-fill2', 'str-label2'); }
-
-let toastTimer;
 function showToast(msg, type) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.className   = 'toast show' + (type === 'err' ? ' err-t' : '');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+  t.className = 'toast show' + (type === 'err' ? ' err-t' : '');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+function checkStrength(v) {
+  const fill  = document.getElementById('str-fill');
+  const label = document.getElementById('str-label');
+  let score = 0;
+  if (v.length >= 8)  score++;
+  if (v.length >= 12) score++;
+  if (/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
+  if (/[0-9]/.test(v))  score++;
+  if (/[^A-Za-z0-9]/.test(v)) score++;
+  const levels = [
+    { w:'0%',   bg:'transparent', txt:'' },
+    { w:'25%',  bg:'#C8281E',     txt:'Weak' },
+    { w:'50%',  bg:'#D97706',     txt:'Fair' },
+    { w:'75%',  bg:'#2563EB',     txt:'Good' },
+    { w:'100%', bg:'#16A34A',     txt:'Strong' },
+  ];
+  const l = levels[Math.min(score, 4)];
+  fill.style.width = l.w; fill.style.background = l.bg;
+  label.textContent = l.txt;
+}
+
+function checkStrength2(v) {
+  const fill  = document.getElementById('str-fill2');
+  const label = document.getElementById('str-label2');
+  let score = 0;
+  if (v.length >= 8)  score++;
+  if (v.length >= 12) score++;
+  if (/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
+  if (/[0-9]/.test(v))  score++;
+  if (/[^A-Za-z0-9]/.test(v)) score++;
+  const levels = [
+    { w:'0%',   bg:'transparent', txt:'' },
+    { w:'25%',  bg:'#C8281E',     txt:'Weak' },
+    { w:'50%',  bg:'#D97706',     txt:'Fair' },
+    { w:'75%',  bg:'#2563EB',     txt:'Good' },
+    { w:'100%', bg:'#16A34A',     txt:'Strong' },
+  ];
+  const l = levels[Math.min(score, 4)];
+  fill.style.width = l.w; fill.style.background = l.bg;
+  label.textContent = l.txt;
 }
 </script>
 </body>
