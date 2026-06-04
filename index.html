@@ -461,6 +461,37 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.err-t{background:var(--kn-crimson)}
 
+/* ── App access grid ── */
+.app-access-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:.2rem .625rem;
+  max-height:160px;overflow-y:auto;
+  border:1.5px solid var(--border);border-radius:var(--radius);
+  padding:.5rem .75rem;background:var(--input-bg);
+}
+.app-check-item{
+  display:flex;align-items:center;gap:.375rem;
+  font-size:.8125rem;color:var(--text);cursor:pointer;padding:2px 0;
+  white-space:nowrap;overflow:hidden;
+}
+.app-check-item input[type=checkbox]{
+  width:14px;height:14px;accent-color:var(--accent);
+  cursor:pointer;flex-shrink:0;
+}
+.app-access-actions{
+  display:flex;gap:.625rem;margin-bottom:.3rem;
+}
+.app-access-actions button{
+  background:none;border:none;font-size:.6875rem;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--accent);
+  cursor:pointer;padding:0;font-family:var(--font);
+}
+.app-access-actions button:hover{text-decoration:underline}
+.app-count-badge{
+  font-size:.625rem;background:rgba(28,92,170,.12);
+  color:var(--accent);border:1px solid rgba(28,92,170,.2);
+  padding:1px 7px;border-radius:20px;font-weight:600;
+}
+
 /* ── Theme toggle ── */
 .theme-btn{
   position:fixed;
@@ -800,11 +831,19 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
         <div class="form-sub">Manage employee accounts</div>
         <div class="field">
           <label for="admin-new-id">Employee ID</label>
-          <input type="text" id="admin-new-id" placeholder="KN-2026-001" maxlength="12" oninput="fmtEmpID(this)">
+          <input type="text" id="admin-new-id" placeholder="KN-2026-001" maxlength="12" oninput="fmtEmpID(this)" onblur="adminPrefillUser()">
         </div>
         <div class="field">
           <label for="admin-new-name">Display name</label>
           <input type="text" id="admin-new-name" placeholder="Jane Smith">
+        </div>
+        <div class="field" style="margin-top:.125rem">
+          <label>Application access</label>
+          <div class="app-access-actions">
+            <button type="button" onclick="adminSelectAllApps()">Select all</button>
+            <button type="button" onclick="adminDeselectAllApps()">Deselect all</button>
+          </div>
+          <div class="app-access-grid" id="admin-app-grid"></div>
         </div>
         <p style="font-size:.75rem;color:var(--text-muted);margin:.25rem 0 .75rem">New users get default password: <code style="color:var(--text);background:var(--badge-bg);padding:1px 6px;border-radius:4px;font-size:.75rem">Kneuralabs@2026</code></p>
         <button class="btn-primary" onclick="adminCreate()">Add / Update user</button>
@@ -914,6 +953,28 @@ const STORE_KEY    = 'kn-users-v3';
 const OVERRIDE_KEY = 'kn-users-overrides-v1';
 const DEFAULT_PW   = 'Kneuralabs@2026';
 
+const APPS = [
+  { id: 'portal',  name: 'Official Website' },
+  { id: 'beacon',  name: 'Beacon' },
+  { id: 'policy',  name: 'Handbook' },
+  { id: 'days',    name: 'KneuraDAYS' },
+  { id: 'sea',     name: 'SEA' },
+  { id: 'scope',   name: 'KneuraSCOPE' },
+  { id: 'lens',    name: 'KneuraLENS' },
+  { id: 'audit',   name: 'KneurAUDIT' },
+  { id: 'trax',    name: 'KneuraTRAX' },
+  { id: 'comm',    name: 'KneuraCOMM' },
+  { id: 'brand',   name: 'Brand' },
+  { id: 'price',   name: 'KneuraPRICE' },
+  { id: 'meet',    name: 'KneuraMEET' },
+  { id: 'vigil',   name: 'Vigil' },
+  { id: 'stratos', name: 'Stratos' },
+  { id: 'nimbus',  name: 'Nimbus' },
+  { id: 'pmo',     name: 'PMO' },
+  { id: 'hire',    name: 'Hire' },
+  { id: 'db',      name: 'PeopleBase' },
+];
+
 const USERS = {
   'admin':       { password: '2d7e38d6f21338fad753eb282c54b74c05b48f017674074fce9f33de583d60d4', name: 'Administrator', role: 'admin'    },
   'KN-2026-001': { password: '71b5dbfbb27c4799097fde2419b63e899746958d00a79584c65862e2434f8a90', name: 'Piyal Gupta',   role: 'employee' },
@@ -945,6 +1006,7 @@ function _diffOverrides(u, detectDeletes = true) {
     const d = {};
     for (const k of ['password', 'name', 'role'])
       if (rec[k] !== seed[k]) d[k] = rec[k];
+    if (JSON.stringify(rec.apps || []) !== JSON.stringify(seed.apps || [])) d.apps = rec.apps || [];
     if (Object.keys(d).length) ov[id] = d;
   }
   if (detectDeletes)
@@ -1000,6 +1062,36 @@ function showScreen(id) {
   const el = document.getElementById(id);
   if (el) el.classList.add('active');
   clearErrors();
+  if (id === 's-admin') renderAdminAppGrid([]);
+}
+
+function renderAdminAppGrid(checkedIds) {
+  const grid = document.getElementById('admin-app-grid');
+  if (!grid) return;
+  grid.innerHTML = APPS.map(a =>
+    `<label class="app-check-item">
+      <input type="checkbox" id="admin-app-${a.id}"${checkedIds.includes(a.id) ? ' checked' : ''}>
+      <span>${a.name}</span>
+    </label>`
+  ).join('');
+}
+
+function adminSelectAllApps() {
+  APPS.forEach(a => { const el = document.getElementById('admin-app-' + a.id); if (el) el.checked = true; });
+}
+
+function adminDeselectAllApps() {
+  APPS.forEach(a => { const el = document.getElementById('admin-app-' + a.id); if (el) el.checked = false; });
+}
+
+function adminPrefillUser() {
+  const id = document.getElementById('admin-new-id').value.trim().toUpperCase();
+  if (!validEmpID(id)) return;
+  const users = _loadUsers();
+  const user  = users[id];
+  if (!user) return;
+  document.getElementById('admin-new-name').value = user.name || '';
+  renderAdminAppGrid(user.apps || []);
 }
 
 function clearErrors() {
@@ -1114,27 +1206,41 @@ function refreshUserList() {
   const el    = document.getElementById('user-list');
   const rows  = Object.entries(users).filter(([id]) => id !== 'admin');
   if (!rows.length) { el.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted)">No users yet.</div>'; return; }
-  el.innerHTML = rows.map(([id, u]) =>
-    `<div class="user-row" role="listitem">
-      <span>${id}</span>
+  el.innerHTML = rows.map(([id, u]) => {
+    const appCount = Array.isArray(u.apps) ? u.apps.length : 0;
+    const appLabel = appCount === 0 ? 'No apps' : appCount + ' app' + (appCount !== 1 ? 's' : '');
+    return `<div class="user-row" role="listitem">
+      <span style="display:flex;flex-direction:column;gap:2px">
+        <span>${id}</span>
+        <span style="font-size:.6875rem;color:var(--text-muted)">${u.name || '—'}</span>
+      </span>
       <span style="display:flex;align-items:center;gap:.5rem">
-        <span class="user-badge">${u.name || '—'}</span>
+        <span class="app-count-badge" title="${appCount > 0 ? (u.apps || []).join(', ') : 'No application access'}" style="cursor:default">${appLabel}</span>
+        <button onclick="adminEditUser('${id}')" style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Edit user">✎</button>
         <button onclick="adminReset('${id}')" style="background:none;border:none;cursor:pointer;color:var(--kn-slate);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Reset to default password">↺</button>
         <button onclick="adminDelete('${id}')" style="background:none;border:none;cursor:pointer;color:var(--kn-red);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Delete user">✕</button>
       </span>
-    </div>`
-  ).join('');
+    </div>`;
+  }).join('');
 }
 
 async function adminCreate() {
   const id   = document.getElementById('admin-new-id').value.trim().toUpperCase();
   const name = document.getElementById('admin-new-name').value.trim();
   if (!validEmpID(id)) { showToast('Enter a valid Employee ID.', 'err'); return; }
+  const selectedApps = APPS.filter(a => document.getElementById('admin-app-' + a.id)?.checked).map(a => a.id);
   const users = _loadUsers();
-  users[id]   = { password: await _sha256(DEFAULT_PW), name: name || id, role: 'employee' };
+  const existing = users[id];
+  users[id] = {
+    password: existing ? existing.password : await _sha256(DEFAULT_PW),
+    name: name || id,
+    role: 'employee',
+    apps: selectedApps,
+  };
   _saveUsers(users);
   document.getElementById('admin-new-id').value   = '';
   document.getElementById('admin-new-name').value = '';
+  adminDeselectAllApps();
   refreshUserList();
   showToast('User saved ✓', 'ok');
 }
@@ -1145,6 +1251,17 @@ function adminDelete(empId) {
   _saveUsers(users);
   refreshUserList();
   showToast('Deleted ' + empId + ' ✓', 'ok');
+}
+
+function adminEditUser(empId) {
+  const users = _loadUsers();
+  const user  = users[empId];
+  if (!user) return;
+  document.getElementById('admin-new-id').value   = empId;
+  document.getElementById('admin-new-name').value = user.name || '';
+  renderAdminAppGrid(user.apps || []);
+  document.getElementById('admin-new-id').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  document.getElementById('admin-new-name').focus();
 }
 
 async function adminReset(empId) {
