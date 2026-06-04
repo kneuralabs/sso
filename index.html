@@ -478,14 +478,28 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   cursor:pointer;flex-shrink:0;
 }
 .app-access-actions{
-  display:flex;gap:.625rem;margin-bottom:.3rem;
+  display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem;
 }
-.app-access-actions button{
-  background:none;border:none;font-size:.6875rem;font-weight:700;
-  letter-spacing:.06em;text-transform:uppercase;color:var(--accent);
-  cursor:pointer;padding:0;font-family:var(--font);
+.app-toggle-label{
+  font-size:.6875rem;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--text-muted);
 }
-.app-access-actions button:hover{text-decoration:underline}
+.app-select-toggle{
+  width:34px;height:19px;border-radius:10px;
+  background:var(--border);border:none;cursor:pointer;
+  padding:0;position:relative;flex-shrink:0;
+  transition:background .22s var(--ease-out);
+}
+.app-select-toggle.on{background:var(--accent)}
+.app-toggle-dot{
+  position:absolute;top:2.5px;left:2.5px;
+  width:14px;height:14px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);
+  transition:transform .22s var(--ease-out);
+  pointer-events:none;
+}
+.app-select-toggle.on .app-toggle-dot{transform:translateX(15px)}
+.app-select-toggle:focus-visible{outline:3px solid var(--kn-blue);outline-offset:2px;border-radius:10px}
 .app-count-badge{
   font-size:.625rem;background:rgba(28,92,170,.12);
   color:var(--accent);border:1px solid rgba(28,92,170,.2);
@@ -840,8 +854,10 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
         <div class="field" style="margin-top:.125rem">
           <label>Application access</label>
           <div class="app-access-actions">
-            <button type="button" onclick="adminSelectAllApps()">Select all</button>
-            <button type="button" onclick="adminDeselectAllApps()">Deselect all</button>
+            <span class="app-toggle-label">Select all</span>
+            <button class="app-select-toggle" id="app-select-toggle" onclick="toggleAllApps(this)" title="Toggle all application access" aria-label="Toggle all applications" aria-pressed="false">
+              <span class="app-toggle-dot"></span>
+            </button>
           </div>
           <div class="app-access-grid" id="admin-app-grid"></div>
         </div>
@@ -1076,11 +1092,21 @@ function renderAdminAppGrid(checkedIds) {
   ).join('');
 }
 
+function toggleAllApps(btn) {
+  const isOn = btn.classList.toggle('on');
+  btn.setAttribute('aria-pressed', isOn);
+  APPS.forEach(a => { const el = document.getElementById('admin-app-' + a.id); if (el) el.checked = isOn; });
+}
+
 function adminSelectAllApps() {
+  const btn = document.getElementById('app-select-toggle');
+  if (btn) { btn.classList.add('on'); btn.setAttribute('aria-pressed','true'); }
   APPS.forEach(a => { const el = document.getElementById('admin-app-' + a.id); if (el) el.checked = true; });
 }
 
 function adminDeselectAllApps() {
+  const btn = document.getElementById('app-select-toggle');
+  if (btn) { btn.classList.remove('on'); btn.setAttribute('aria-pressed','false'); }
   APPS.forEach(a => { const el = document.getElementById('admin-app-' + a.id); if (el) el.checked = false; });
 }
 
@@ -1148,8 +1174,8 @@ async function checkPW() {
   errEl.classList.remove('show');
   currentPw = pw;
   btn.disabled = false; btn.textContent = 'Sign in';
-  if (redirectUrl === 'postmessage') { window.parent.postMessage({type:'kn-auth',id:currentID,name:user.name,role:user.role}, '*'); return; }
-  if (redirectUrl) { const _rDest = new URL(redirectUrl, location.href); _rDest.searchParams.set('kn-auth', btoa(JSON.stringify({id:currentID,name:user.name,role:user.role}))); location.replace(_rDest.toString()); return; }
+  if (redirectUrl === 'postmessage') { window.parent.postMessage({type:'kn-auth',id:currentID,name:user.name,role:user.role,apps:user.apps||[]}, '*'); return; }
+  if (redirectUrl) { const _rDest = new URL(redirectUrl, location.href); _rDest.searchParams.set('kn-auth', btoa(JSON.stringify({id:currentID,name:user.name,role:user.role,apps:user.apps||[]}))); location.replace(_rDest.toString()); return; }
   if (user.role === 'admin') {
     refreshUserList();
     showScreen('s-admin');
