@@ -393,7 +393,19 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   font-size:1.4rem;
 }
 
+/* ── Password toggle ── */
 .pw-wrap{position:relative}
+.pw-wrap input{padding-right:3.75rem}
+/* Hide the browser's built-in reveal control (Edge) so only our toggle shows */
+.pw-wrap input::-ms-reveal{display:none}
+.pw-toggle{
+  position:absolute;right:.75rem;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;padding:2px;
+  color:var(--text);display:flex;align-items:center;justify-content:center;
+  transition:color .15s;
+}
+.pw-toggle:hover{color:var(--accent)}
+.pw-toggle:focus-visible{outline:3px solid var(--kn-blue);outline-offset:2px;border-radius:3px}
 
 /* ── Strength bar ── */
 .strength-bar{height:3px;border-radius:2px;background:var(--border);margin-top:.5rem;overflow:hidden}
@@ -834,6 +846,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
           <div class="pw-wrap">
             <input type="password" id="pw-input" placeholder="Your password"
               autocomplete="current-password" onkeydown="if(event.key==='Enter')checkPW()">
+            <button class="pw-toggle" onclick="togglePw('pw-input',this)" type="button" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
           <div class="errmsg" id="err-pw" role="alert">Incorrect password. Please try again.</div>
         </div>
@@ -855,6 +868,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
           <label for="old-pw">Current / Admin password</label>
           <div class="pw-wrap">
             <input type="password" id="old-pw" placeholder="Current or admin password" autocomplete="current-password">
+            <button class="pw-toggle" onclick="togglePw('old-pw',this)" type="button" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
           <div class="errmsg" id="err-old" role="alert">Incorrect password.</div>
         </div>
@@ -863,6 +877,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
           <div class="pw-wrap">
             <input type="password" id="new-pw" placeholder="Min 8 chars, letters &amp; numbers"
               oninput="checkStrength(this.value)" autocomplete="new-password">
+            <button class="pw-toggle" onclick="togglePw('new-pw',this)" type="button" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
           <div class="strength-bar"><div class="strength-fill" id="str-fill"></div></div>
           <div class="hint" id="str-label" aria-live="polite"></div>
@@ -872,6 +887,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
           <div class="pw-wrap">
             <input type="password" id="conf-pw" placeholder="Repeat new password" autocomplete="new-password"
               onkeydown="if(event.key==='Enter')changePassword()">
+            <button class="pw-toggle" onclick="togglePw('conf-pw',this)" type="button" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
           <div class="errmsg" id="err-conf" role="alert">Passwords do not match.</div>
         </div>
@@ -948,6 +964,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
           <label for="self-old-pw">Current password</label>
           <div class="pw-wrap">
             <input type="password" id="self-old-pw" placeholder="Current password" autocomplete="current-password">
+            <button class="pw-toggle" onclick="togglePw('self-old-pw',this)" type="button" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
           <div class="errmsg" id="err-self-old" role="alert">Incorrect password.</div>
         </div>
@@ -956,6 +973,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
           <div class="pw-wrap">
             <input type="password" id="self-new-pw" placeholder="Min 8 characters"
               oninput="checkStrength2(this.value)" autocomplete="new-password">
+            <button class="pw-toggle" onclick="togglePw('self-new-pw',this)" type="button" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
           <div class="strength-bar"><div class="strength-fill" id="str-fill2"></div></div>
           <div class="hint" id="str-label2" aria-live="polite"></div>
@@ -964,6 +982,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
           <label for="self-conf-pw">Confirm new password</label>
           <div class="pw-wrap">
             <input type="password" id="self-conf-pw" placeholder="Repeat new password" autocomplete="new-password">
+            <button class="pw-toggle" onclick="togglePw('self-conf-pw',this)" type="button" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
           <div class="errmsg" id="err-self-conf" role="alert">Passwords do not match.</div>
         </div>
@@ -1534,6 +1553,14 @@ function _closeThisTab() {
       });
     }, 300);
   }, 300);
+}
+
+const _EYE    = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const _EYE_OFF = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+function togglePw(id, btn) {
+  const el = document.getElementById(id);
+  if (el.type === 'password') { el.type = 'text';     btn.innerHTML = _EYE_OFF; btn.setAttribute('aria-label','Hide password'); }
+  else                        { el.type = 'password'; btn.innerHTML = _EYE;     btn.setAttribute('aria-label','Show password'); }
 }
 
 function strengthScore(v) {
