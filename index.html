@@ -1335,9 +1335,14 @@ async function checkPW() {
   currentPw = pw;
   btn.disabled = false; btn.textContent = 'Sign in';
   // App grants live in the shared backend so they apply on any device. Fall
-  // back to the local copy only if the backend is unreachable.
+  // back to the local copy only when the backend is unreachable or has no
+  // row — and push that local copy up, so grants stop living in a single
+  // browser's localStorage and the next device sees them too.
   let _apps = user.role === 'admin' ? [] : await _remoteGetApps(currentID);
-  if (_apps === null) _apps = user.apps || [];
+  if (_apps === null) {
+    _apps = user.apps || [];
+    if (_apps.length) _remoteSetApps(currentID, _apps);
+  }
   const _authPayload = {id:currentID,name:user.name,role:user.role,apps:_apps};
   if (redirectUrl === 'postmessage') {
     // Target the embedding parent's origin explicitly — never '*'.
