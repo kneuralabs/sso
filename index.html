@@ -1384,7 +1384,7 @@ async function checkPW() {
   // back to the local copy only when the backend is unreachable or has no
   // row — and push that local copy up, so grants stop living in a single
   // browser's localStorage and the next device sees them too.
-  let _apps = user.role === 'admin' ? [] : await _remoteGetApps(currentID);
+  let _apps = user.role === 'admin' ? APPS.map(a => a.id) : await _remoteGetApps(currentID);
   if (_apps === null) {
     _apps = user.apps || [];
     if (_apps.length) _remoteSetApps(currentID, _apps);
