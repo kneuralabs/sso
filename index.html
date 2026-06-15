@@ -539,6 +539,47 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .dir-apps .app-access-grid{margin-bottom:.6rem}
 .dir-loading,.dir-empty{font-size:.82rem;color:var(--text-muted);padding:.5rem 0}
 
+/* ── Admin: user picker + app-access widget grid ── */
+.adm-pick{margin:.9rem 0 1rem}
+.adm-pick label{display:block;font-size:.6875rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.4rem}
+.adm-pick-row{display:flex;gap:.5rem;align-items:stretch}
+.adm-pick select{flex:1;min-width:0;height:42px;padding:0 .75rem;border-radius:var(--radius);border:1.5px solid var(--border);background:var(--input-bg);color:var(--text);font-family:var(--font);font-size:.85rem;font-weight:600;cursor:pointer;-webkit-appearance:none;appearance:none}
+.adm-pick select:focus{outline:none;border-color:var(--accent);background:var(--input-focus-bg)}
+.usr-meta{font-size:.72rem;color:var(--text-muted);margin:-.2rem 0 .7rem;text-align:center}
+.usr-empty{font-size:.82rem;color:var(--text-muted);padding:.75rem 0;text-align:center}
+.usr-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:.55rem;margin-bottom:1rem}
+.usr-box{position:relative;border:1.5px solid var(--kn-red);border-radius:12px;padding:.7rem .35rem .55rem;background:var(--surface);display:flex;flex-direction:column;align-items:center;gap:.4rem;text-align:center;cursor:pointer;overflow:hidden;transition:transform .18s var(--ease-out),border-color .25s,box-shadow .25s,background .25s}
+.usr-box::before{content:"";position:absolute;inset:0;background:var(--kn-red);opacity:.06;transition:background .25s,opacity .25s;pointer-events:none}
+.usr-box:hover{transform:translateY(-2px)}
+.usr-ico{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:16px;background:rgba(200,40,30,.12);z-index:1;transition:all .25s}
+.usr-nm{font-size:.62rem;font-weight:700;line-height:1.15;color:var(--text);z-index:1}
+.usr-st{font-size:.5rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--kn-red);min-height:.72rem;z-index:1;display:flex;align-items:center;gap:3px}
+.usr-sw{position:relative;width:34px;height:18px;border-radius:10px;background:var(--kn-slate);opacity:.6;z-index:1;flex-shrink:0;transition:background .25s,opacity .25s}
+.usr-sw::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .22s var(--ease-out)}
+.usr-box.on .usr-sw{opacity:1}
+.usr-box.on .usr-sw::after{transform:translateX(16px)}
+.usr-box.checking{border-color:var(--accent);animation:usrpulse 1s ease-in-out infinite}
+.usr-box.checking::before{background:var(--accent)}
+.usr-box.checking .usr-ico{background:rgba(28,92,170,.14)}
+.usr-box.checking .usr-st{color:var(--accent)}
+.usr-box.checking .usr-sw{background:var(--accent)}
+.usr-box.granted{border-color:#16A34A;background:linear-gradient(160deg,rgba(22,163,74,.10),transparent);box-shadow:0 0 0 3px rgba(22,163,74,.16)}
+.usr-box.granted::before{background:#16A34A;opacity:.10}
+.usr-box.granted .usr-ico{background:rgba(22,163,74,.16)}
+.usr-box.granted .usr-st{color:#16A34A}
+.usr-box.granted .usr-sw{background:#16A34A}
+.usr-box.denied{border-color:#D97706;background:linear-gradient(160deg,rgba(217,119,6,.12),transparent)}
+.usr-box.denied::before{background:#D97706}
+.usr-box.denied .usr-ico{background:rgba(217,119,6,.16)}
+.usr-box.denied .usr-st{color:#D97706}
+.usr-box.denied .usr-sw{background:#D97706}
+@keyframes usrpulse{0%,100%{box-shadow:0 0 0 0 rgba(28,92,170,.4)}50%{box-shadow:0 0 0 5px rgba(28,92,170,0)}}
+.usr-spin{width:8px;height:8px;border:1.5px solid currentColor;border-top-color:transparent;border-radius:50%;display:inline-block;animation:usrspin .7s linear infinite}
+@keyframes usrspin{to{transform:rotate(360deg)}}
+.form-wrap:has(#s-admin.active){max-width:720px}
+@media(max-width:680px){.usr-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:420px){.usr-grid{grid-template-columns:repeat(2,1fr)}}
+
 /* ── Theme toggle ── */
 .theme-btn{
   position:fixed;
@@ -916,14 +957,17 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
         <div class="success-icon" aria-hidden="true">⚙️</div>
         <div class="form-title">Admin console</div>
         <div class="form-sub">Grant application access to employees</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin:.9rem 0 .6rem">
-          <div style="font-size:.6875rem;color:var(--text-muted);letter-spacing:.07em;text-transform:uppercase;font-weight:700">Employees</div>
-          <button class="app-refresh-btn" onclick="loadDirectory()" title="Refresh employee directory" aria-label="Refresh employee directory">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-            Refresh
-          </button>
+        <div class="adm-pick">
+          <label for="dir-user-select">Employee</label>
+          <div class="adm-pick-row">
+            <select id="dir-user-select" onchange="onDirUserSelect()" aria-label="Select employee"><option value="">— Select an employee —</option></select>
+            <button class="app-refresh-btn" onclick="loadDirectory()" title="Refresh employee directory" aria-label="Refresh employee directory">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Refresh
+            </button>
+          </div>
         </div>
-        <div id="user-list" role="list"></div>
+        <div id="dir-grid"></div>
         <button class="btn-outline" id="btn-close-admin" style="margin-top:1rem" onclick="doClose()">Close</button>
       </div>
 
@@ -1282,58 +1326,99 @@ function renderDashApps(appIds) {
 // db.kneuralabs.com Pages host. Grants are stored per-user in the shared backend.
 const DIR_URL = 'https://raw.githubusercontent.com/kneuralabs/db/main/data/employees.json';
 
-function _appLabel(n) { return n === 0 ? 'No apps' : n + ' app' + (n !== 1 ? 's' : ''); }
+// Upsert grants and report success so the UI can show green (granted) vs amber
+// (could not grant) — unlike _remoteSetApps which swallows the outcome.
+async function _remoteSetAppsOK(empId, apps) {
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/kn_app_access?on_conflict=employee_id', {
+      method: 'POST',
+      headers: { ..._sbHeaders, Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify({ employee_id: empId, apps, updated_at: new Date().toISOString() }),
+    });
+    return r.ok;
+  } catch { return false; }
+}
+
+let _dirEmps = [], _dirGrants = {}, _dirSel = '', _dirCur = new Set();
+const _userName   = e => ((e.first || '') + ' ' + (e.last || '')).trim() || e.name || e.id;
+const _userUname  = e => (e.email || '').split('@')[0] || ((e.first || '') + '.' + (e.last || '')).toLowerCase().replace(/\s+/g, '');
+const _userActive = e => (e.status || '').toLowerCase() === 'active';
 
 async function loadDirectory() {
-  const el = document.getElementById('user-list');
-  if (!el) return;
-  el.innerHTML = '<div class="dir-loading">Loading employees…</div>';
-  let emps;
+  const sel = document.getElementById('dir-user-select');
+  const grid = document.getElementById('dir-grid');
+  if (!sel || !grid) return;
+  grid.innerHTML = '<div class="usr-empty">Loading employees…</div>';
   try {
     const r = await fetch(DIR_URL, { cache: 'no-store' });
     if (!r.ok) throw 0;
-    emps = await r.json();
+    _dirEmps = await r.json();
   } catch {
-    el.innerHTML = '<div class="dir-empty">Could not reach the employee directory.</div>';
+    grid.innerHTML = '<div class="usr-empty">Could not reach the employee directory.</div>'; return;
+  }
+  if (!Array.isArray(_dirEmps) || !_dirEmps.length) {
+    grid.innerHTML = '<div class="usr-empty">No employees found.</div>'; return;
+  }
+  _dirGrants = await _remoteGetAllApps();
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— Select an employee —</option>' + _dirEmps.map(e =>
+    `<option value="${e.id}">${_userUname(e)} — ${_userName(e)} — ${_userActive(e) ? 'Active' : 'Revoked'}</option>`
+  ).join('');
+  if (_dirEmps.some(e => e.id === prev)) { sel.value = prev; onDirUserSelect(); }
+  else grid.innerHTML = '<div class="usr-empty">Select an employee to manage app access.</div>';
+}
+
+function onDirUserSelect() {
+  const sel = document.getElementById('dir-user-select');
+  const grid = document.getElementById('dir-grid');
+  _dirSel = sel.value;
+  if (!_dirSel) { grid.innerHTML = '<div class="usr-empty">Select an employee to manage app access.</div>'; return; }
+  _dirCur = new Set(Array.isArray(_dirGrants[_dirSel]) ? _dirGrants[_dirSel] : []);
+  const emp = _dirEmps.find(e => e.id === _dirSel);
+  const active = emp ? _userActive(emp) : true;
+  grid.innerHTML =
+    `<div class="usr-meta">${_userName(emp)} · ${_dirSel} · <strong style="color:${active ? '#16A34A' : '#D97706'}">${active ? 'Active' : 'Revoked'}</strong></div>` +
+    `<div class="usr-grid">${APPS.map(a => {
+      const on = _dirCur.has(a.id);
+      const seal = (_DASH_TOOLS[a.id] || {}).seal || a.name.charAt(0);
+      return `<div class="usr-box${on ? ' on granted' : ''}" id="ub-${a.id}" onclick="toggleUserApp('${a.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUserApp('${a.id}')}" role="switch" aria-checked="${on}" tabindex="0" aria-label="${a.name} access">
+        <div class="usr-ico">${seal}</div>
+        <div class="usr-nm">${a.name}</div>
+        <div class="usr-st">${on ? 'Granted' : 'No access'}</div>
+        <div class="usr-sw"></div>
+      </div>`;
+    }).join('')}</div>`;
+}
+
+async function toggleUserApp(appId) {
+  if (!_dirSel) return;
+  const box = document.getElementById('ub-' + appId);
+  if (!box || box.classList.contains('checking')) return;
+  const st = box.querySelector('.usr-st');
+  const turningOn = !_dirCur.has(appId);
+  if (!turningOn) { // revoke access
+    _dirCur.delete(appId);
+    box.className = 'usr-box'; box.setAttribute('aria-checked', 'false'); st.textContent = 'No access';
+    if (await _remoteSetAppsOK(_dirSel, [..._dirCur])) {
+      _dirGrants[_dirSel] = [..._dirCur]; showToast(appId + ' access revoked for ' + _dirSel, 'ok');
+    } else {
+      _dirCur.add(appId); box.className = 'usr-box on denied'; st.textContent = 'Save failed';
+    }
     return;
   }
-  if (!Array.isArray(emps) || !emps.length) {
-    el.innerHTML = '<div class="dir-empty">No employees found.</div>'; return;
+  // grant access — show "Giving access…" while we verify it's possible
+  box.className = 'usr-box on checking'; box.setAttribute('aria-checked', 'true');
+  st.innerHTML = '<span class="usr-spin"></span> Giving access…';
+  _dirCur.add(appId);
+  if (await _remoteSetAppsOK(_dirSel, [..._dirCur])) {
+    box.className = 'usr-box on granted'; st.textContent = 'Granted';
+    _dirGrants[_dirSel] = [..._dirCur];
+    showToast(appId + ' access granted to ' + _dirSel + ' ✓', 'ok');
+  } else {
+    _dirCur.delete(appId);
+    box.className = 'usr-box on denied'; st.textContent = 'Cannot grant';
+    showToast('Could not grant ' + appId + ' access', 'err');
   }
-  const grants = await _remoteGetAllApps();
-  el.innerHTML = emps.map(e => {
-    const id   = e.id;
-    const name = ((e.first || '') + ' ' + (e.last || '')).trim() || e.name || id;
-    const apps = Array.isArray(grants[id]) ? grants[id] : [];
-    return `<div class="dir-user" role="listitem">
-      <button class="dir-head" onclick="toggleDirUser('${id}')" aria-expanded="false">
-        <span><span class="dir-name">${name}</span><span class="dir-id">${id}</span></span>
-        <span class="app-count-badge">${_appLabel(apps.length)}</span>
-      </button>
-      <div class="dir-apps" id="dir-apps-${id}" hidden>
-        <div class="app-access-grid">${APPS.map(a =>
-          `<label class="app-check-item"><input type="checkbox" data-emp="${id}" value="${a.id}"${apps.includes(a.id) ? ' checked' : ''}><span>${a.name}</span></label>`
-        ).join('')}</div>
-        <button class="btn-primary" style="height:40px" onclick="saveDirUser('${id}')">Save access</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function toggleDirUser(id) {
-  const p = document.getElementById('dir-apps-' + id);
-  if (!p) return;
-  p.hidden = !p.hidden;
-  if (p.previousElementSibling) p.previousElementSibling.setAttribute('aria-expanded', String(!p.hidden));
-}
-
-async function saveDirUser(id) {
-  const apps = [...document.querySelectorAll('input[data-emp="' + id + '"]:checked')].map(i => i.value);
-  await _remoteSetApps(id, apps);
-  const card  = document.getElementById('dir-apps-' + id).closest('.dir-user');
-  const badge = card && card.querySelector('.app-count-badge');
-  if (badge) badge.textContent = _appLabel(apps.length);
-  showToast('Access updated for ' + id + ' ✓', 'ok');
 }
 
 function renderAdminAppGrid(checkedIds) {
