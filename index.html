@@ -519,8 +519,25 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .app-count-badge{
   font-size:.625rem;background:rgba(28,92,170,.12);
   color:var(--accent);border:1px solid rgba(28,92,170,.2);
-  padding:1px 7px;border-radius:20px;font-weight:600;
+  padding:1px 7px;border-radius:20px;font-weight:600;flex-shrink:0;
 }
+
+/* ── Admin employee directory ── */
+.dir-user{
+  border:1.5px solid var(--border);border-radius:var(--radius);
+  margin-bottom:.5rem;background:var(--input-bg);overflow:hidden;
+}
+.dir-head{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  gap:.5rem;padding:.65rem .8rem;background:none;border:none;cursor:pointer;
+  font-family:var(--font);text-align:left;
+}
+.dir-head:hover{background:var(--badge-bg)}
+.dir-name{display:block;font-size:.875rem;font-weight:600;color:var(--text)}
+.dir-id{display:block;font-size:.6875rem;color:var(--text-muted);margin-top:1px}
+.dir-apps{padding:0 .8rem .8rem}
+.dir-apps .app-access-grid{margin-bottom:.6rem}
+.dir-loading,.dir-empty{font-size:.82rem;color:var(--text-muted);padding:.5rem 0}
 
 /* ── Theme toggle ── */
 .theme-btn{
@@ -898,42 +915,16 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
       <div class="screen" id="s-admin">
         <div class="success-icon" aria-hidden="true">⚙️</div>
         <div class="form-title">Admin console</div>
-        <div class="form-sub">Manage employee accounts</div>
-        <div class="field">
-          <label for="admin-new-id">Employee ID</label>
-          <input type="text" id="admin-new-id" placeholder="KN-2026-001" maxlength="12" oninput="fmtEmpID(this)" onblur="adminPrefillUser()">
+        <div class="form-sub">Grant application access to employees</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin:.9rem 0 .6rem">
+          <div style="font-size:.6875rem;color:var(--text-muted);letter-spacing:.07em;text-transform:uppercase;font-weight:700">Employees</div>
+          <button class="app-refresh-btn" onclick="loadDirectory()" title="Refresh employee directory" aria-label="Refresh employee directory">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Refresh
+          </button>
         </div>
-        <div class="field">
-          <label for="admin-new-name">Display name</label>
-          <input type="text" id="admin-new-name" placeholder="Jane Smith">
-        </div>
-        <div class="field" style="margin-top:.125rem">
-          <label>Application access</label>
-          <div class="app-access-actions">
-            <span class="app-toggle-label">Select all</span>
-            <button class="app-select-toggle" id="app-select-toggle" onclick="toggleAllApps(this)" title="Toggle all application access" aria-label="Toggle all applications" aria-pressed="false">
-              <span class="app-toggle-dot"></span>
-            </button>
-            <button class="app-refresh-btn" onclick="refreshAppGrid()" title="Refresh app list" aria-label="Refresh application list">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-              Refresh
-            </button>
-          </div>
-          <div class="app-access-grid" id="admin-app-grid"></div>
-        </div>
-        <p style="font-size:.75rem;color:var(--text-muted);margin:.25rem 0 .75rem">New users get default password: <code style="color:var(--text);background:var(--badge-bg);padding:1px 6px;border-radius:4px;font-size:.75rem">Kneuralabs@2026</code></p>
-        <button class="btn-primary" onclick="adminCreate()">Add / Update user</button>
-        <div style="margin-top:1.5rem;border-top:1px solid var(--border);padding-top:1.25rem">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
-            <div style="font-size:.6875rem;color:var(--text-muted);letter-spacing:.07em;text-transform:uppercase;font-weight:700">Active users</div>
-            <button class="app-refresh-btn" onclick="refreshUserList()" title="Refresh user list" aria-label="Refresh active users">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-              Refresh
-            </button>
-          </div>
-          <div id="user-list" role="list"></div>
-        </div>
-        <button class="btn-outline" id="btn-close-admin" style="margin-top:.625rem" onclick="doClose()">Close</button>
+        <div id="user-list" role="list"></div>
+        <button class="btn-outline" id="btn-close-admin" style="margin-top:1rem" onclick="doClose()">Close</button>
       </div>
 
       <!-- SCREEN: Dashboard (logged in) -->
@@ -1265,7 +1256,12 @@ const _DASH_TOOLS = {
 
 function renderDashApps(appIds) {
   const wrap = document.getElementById('dash-app-grid');
-  if (!wrap || !appIds || !appIds.length) return;
+  if (!wrap) return;
+  wrap.style.display = '';
+  if (!appIds || !appIds.length) {
+    wrap.innerHTML = '<div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#6060a0;margin-bottom:10px">Your Apps</div><div style="font-size:.8rem;color:var(--text-muted)">No applications assigned yet. Your administrator will grant access.</div>';
+    return;
+  }
   const tiles = appIds
     .filter(id => _DASH_TOOLS[id])
     .map(id => {
@@ -1279,6 +1275,65 @@ function renderDashApps(appIds) {
   if (!tiles) return;
   wrap.innerHTML = `<div style="font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#6060a0;margin-bottom:10px">Your Apps</div><div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">${tiles}</div>`;
   wrap.style.display = '';
+}
+
+// ── Admin: employee directory pulled live from the DB repo ──────────────────
+// Served cross-origin from raw.githubusercontent (sends CORS *), unlike the
+// db.kneuralabs.com Pages host. Grants are stored per-user in the shared backend.
+const DIR_URL = 'https://raw.githubusercontent.com/kneuralabs/db/main/data/employees.json';
+
+function _appLabel(n) { return n === 0 ? 'No apps' : n + ' app' + (n !== 1 ? 's' : ''); }
+
+async function loadDirectory() {
+  const el = document.getElementById('user-list');
+  if (!el) return;
+  el.innerHTML = '<div class="dir-loading">Loading employees…</div>';
+  let emps;
+  try {
+    const r = await fetch(DIR_URL, { cache: 'no-store' });
+    if (!r.ok) throw 0;
+    emps = await r.json();
+  } catch {
+    el.innerHTML = '<div class="dir-empty">Could not reach the employee directory.</div>';
+    return;
+  }
+  if (!Array.isArray(emps) || !emps.length) {
+    el.innerHTML = '<div class="dir-empty">No employees found.</div>'; return;
+  }
+  const grants = await _remoteGetAllApps();
+  el.innerHTML = emps.map(e => {
+    const id   = e.id;
+    const name = ((e.first || '') + ' ' + (e.last || '')).trim() || e.name || id;
+    const apps = Array.isArray(grants[id]) ? grants[id] : [];
+    return `<div class="dir-user" role="listitem">
+      <button class="dir-head" onclick="toggleDirUser('${id}')" aria-expanded="false">
+        <span><span class="dir-name">${name}</span><span class="dir-id">${id}</span></span>
+        <span class="app-count-badge">${_appLabel(apps.length)}</span>
+      </button>
+      <div class="dir-apps" id="dir-apps-${id}" hidden>
+        <div class="app-access-grid">${APPS.map(a =>
+          `<label class="app-check-item"><input type="checkbox" data-emp="${id}" value="${a.id}"${apps.includes(a.id) ? ' checked' : ''}><span>${a.name}</span></label>`
+        ).join('')}</div>
+        <button class="btn-primary" style="height:40px" onclick="saveDirUser('${id}')">Save access</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDirUser(id) {
+  const p = document.getElementById('dir-apps-' + id);
+  if (!p) return;
+  p.hidden = !p.hidden;
+  if (p.previousElementSibling) p.previousElementSibling.setAttribute('aria-expanded', String(!p.hidden));
+}
+
+async function saveDirUser(id) {
+  const apps = [...document.querySelectorAll('input[data-emp="' + id + '"]:checked')].map(i => i.value);
+  await _remoteSetApps(id, apps);
+  const card  = document.getElementById('dir-apps-' + id).closest('.dir-user');
+  const badge = card && card.querySelector('.app-count-badge');
+  if (badge) badge.textContent = _appLabel(apps.length);
+  showToast('Access updated for ' + id + ' ✓', 'ok');
 }
 
 function renderAdminAppGrid(checkedIds) {
@@ -1406,8 +1461,8 @@ async function checkPW() {
   }
   if (user.role === 'admin') {
     await _syncLocalGrantsToRemote();
-    refreshUserList();
     showScreen('s-admin');
+    loadDirectory();
   } else {
     document.getElementById('dash-name').textContent = 'Welcome, ' + user.name + '.';
     document.getElementById('dash-id').textContent   = currentID;
