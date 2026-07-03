@@ -347,28 +347,6 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .btn-outline:hover{background:var(--accent);color:#fff}
 .btn-outline:focus-visible{outline:3px solid var(--kn-blue);outline-offset:2px}
 
-/* ── Divider ── */
-.divider{display:flex;align-items:center;gap:.75rem;margin:1.25rem 0}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
-.divider span{font-size:.75rem;color:var(--text-muted);white-space:nowrap;font-weight:500}
-
-/* ── Security key grid ── */
-.key-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.5rem}
-.btn-key{
-  height:44px;
-  background:var(--input-bg);
-  border:1.5px solid var(--border);
-  border-radius:var(--radius);
-  font-size:.8125rem;
-  font-weight:500;
-  font-family:var(--font);
-  cursor:pointer;
-  display:flex;align-items:center;justify-content:center;gap:.5rem;
-  color:var(--text);
-}
-.btn-key:hover{border-color:var(--accent);color:var(--accent)}
-.btn-key:focus-visible{outline:3px solid var(--kn-blue);outline-offset:2px}
-
 /* ── Back link ── */
 .back-link{
   font-size:.8125rem;
@@ -411,24 +389,6 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .strength-bar{height:3px;border-radius:2px;background:var(--border);margin-top:.5rem;overflow:hidden}
 .strength-fill{height:100%;border-radius:2px;transition:width .3s,background .3s;width:0%}
 
-/* ── User list ── */
-.user-row{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:7px 0;
-  border-bottom:1px solid var(--border);
-  font-size:.84rem;
-  color:var(--text);
-}
-.user-row:last-child{border-bottom:none}
-.user-badge{
-  font-size:.6875rem;
-  background:var(--badge-bg);
-  padding:2px 10px;
-  border-radius:20px;
-  color:var(--text-muted);
-  font-weight:500;
-}
-
 /* ── Info box ── */
 .info-box{
   background:var(--info-bg);
@@ -463,28 +423,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.err-t{background:var(--kn-crimson)}
 
-/* ── App access grid ── */
-.app-access-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:.2rem .625rem;
-  border:1.5px solid var(--border);border-radius:var(--radius);
-  padding:.5rem .75rem;background:var(--input-bg);
-}
-.app-check-item{
-  display:flex;align-items:center;gap:.375rem;
-  font-size:.8125rem;color:var(--text);cursor:pointer;padding:2px 0;
-  white-space:nowrap;overflow:hidden;
-}
-.app-check-item input[type=checkbox]{
-  width:15px;height:15px;min-width:15px;
-  /* Restore native checkbox UI stripped by the global `.field input` reset */
-  -webkit-appearance:checkbox;appearance:auto;
-  accent-color:var(--accent);
-  background:none;border:none;border-radius:0;padding:0;margin:0;
-  cursor:pointer;flex-shrink:0;
-}
-.app-access-actions{
-  display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem;
-}
+/* ── Refresh button (admin employee picker) ── */
 .app-refresh-btn{
   margin-left:auto;display:flex;align-items:center;gap:.3rem;
   background:none;border:1px solid var(--border);border-radius:6px;
@@ -494,50 +433,6 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 }
 .app-refresh-btn:hover{border-color:var(--accent);color:var(--accent)}
 .app-refresh-btn svg{width:11px;height:11px;flex-shrink:0}
-.app-toggle-label{
-  font-size:.6875rem;font-weight:700;letter-spacing:.06em;
-  text-transform:uppercase;color:var(--text-muted);
-}
-.app-select-toggle{
-  width:34px;height:19px;border-radius:10px;
-  /* OFF-state track: a muted slate so the control is clearly visible
-     against the light card (plain --border is near-white) */
-  background:var(--kn-slate);border:none;cursor:pointer;
-  padding:0;position:relative;flex-shrink:0;opacity:.55;
-  transition:background .22s var(--ease-out),opacity .22s var(--ease-out);
-}
-.app-select-toggle.on{background:var(--accent);opacity:1}
-.app-toggle-dot{
-  position:absolute;top:2.5px;left:2.5px;
-  width:14px;height:14px;border-radius:50%;
-  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);
-  transition:transform .22s var(--ease-out);
-  pointer-events:none;
-}
-.app-select-toggle.on .app-toggle-dot{transform:translateX(15px)}
-.app-select-toggle:focus-visible{outline:3px solid var(--kn-blue);outline-offset:2px;border-radius:10px}
-.app-count-badge{
-  font-size:.625rem;background:rgba(28,92,170,.12);
-  color:var(--accent);border:1px solid rgba(28,92,170,.2);
-  padding:1px 7px;border-radius:20px;font-weight:600;flex-shrink:0;
-}
-
-/* ── Admin employee directory ── */
-.dir-user{
-  border:1.5px solid var(--border);border-radius:var(--radius);
-  margin-bottom:.5rem;background:var(--input-bg);overflow:hidden;
-}
-.dir-head{
-  width:100%;display:flex;align-items:center;justify-content:space-between;
-  gap:.5rem;padding:.65rem .8rem;background:none;border:none;cursor:pointer;
-  font-family:var(--font);text-align:left;
-}
-.dir-head:hover{background:var(--badge-bg)}
-.dir-name{display:block;font-size:.875rem;font-weight:600;color:var(--text)}
-.dir-id{display:block;font-size:.6875rem;color:var(--text-muted);margin-top:1px}
-.dir-apps{padding:0 .8rem .8rem}
-.dir-apps .app-access-grid{margin-bottom:.6rem}
-.dir-loading,.dir-empty{font-size:.82rem;color:var(--text-muted);padding:.5rem 0}
 
 /* ── Admin: user picker + app-access widget grid ── */
 .adm-pick{margin:.9rem 0 1rem}
@@ -678,10 +573,9 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   .field{margin-bottom:.625rem}
   .form-title{font-size:1.25rem;margin-bottom:.1rem}
   .form-sub{font-size:.8rem;margin-bottom:.875rem}
-  .btn-primary,.btn-outline,.btn-key{height:40px;font-size:.875rem}
+  .btn-primary,.btn-outline{height:40px;font-size:.875rem}
   .field input{height:40px;font-size:.875rem}
   .top-link{top:.875rem}
-  .divider{margin:.625rem 0}
 }
 @media(max-width:599px){
   .left{height:200px;padding:1.125rem 1.25rem 1.25rem}
@@ -697,22 +591,18 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   .form-wrap{max-width:100%}
   .top-link{right:1.25rem;top:1rem;font-size:.75rem}
   .form-title{font-size:1.4375rem}
-  .key-grid{grid-template-columns:1fr}
   .toast{left:1rem;right:1rem;max-width:none;bottom:1.25rem}
   .theme-btn{bottom:1rem;left:1rem;width:32px;height:32px}
   .theme-btn svg{width:13px;height:13px}
   .info-box{padding:.75rem}
-  .user-row{font-size:.8rem}
 }
 @media(max-width:359px){
   .left{height:175px}
   .right{padding:2.25rem 1rem 1.5rem}
   .field input,.btn-primary,.btn-outline{height:44px;font-size:.875rem}
-  .btn-key{height:40px;font-size:.75rem}
   .form-title{font-size:1.3125rem}
   .form-sub{font-size:.8125rem;margin-bottom:1.25rem}
   .top-link{top:.875rem;right:1rem;font-size:.6875rem}
-  .key-grid{gap:.375rem}
   .theme-btn{width:30px;height:30px;left:.875rem}
   .theme-btn svg{width:12px;height:12px}
 }
@@ -934,7 +824,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
           <label for="new-pw">New password</label>
           <div class="pw-wrap">
             <input type="password" id="new-pw" placeholder="Min 8 chars, letters &amp; numbers"
-              oninput="checkStrength(this.value)" autocomplete="new-password">
+              oninput="applyStrength(this.value,'str-fill','str-label')" autocomplete="new-password">
             <button class="pw-toggle" onclick="togglePw('new-pw',this)" type="button" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
           <div class="strength-bar"><div class="strength-fill" id="str-fill"></div></div>
@@ -1007,7 +897,7 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
           <label for="self-new-pw">New password</label>
           <div class="pw-wrap">
             <input type="password" id="self-new-pw" placeholder="Min 8 characters"
-              oninput="checkStrength2(this.value)" autocomplete="new-password">
+              oninput="applyStrength(this.value,'str-fill2','str-label2')" autocomplete="new-password">
             <button class="pw-toggle" onclick="togglePw('self-new-pw',this)" type="button" aria-label="Show password"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           </div>
           <div class="strength-bar"><div class="strength-fill" id="str-fill2"></div></div>
@@ -1069,33 +959,35 @@ svg.bg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 <script>
 const STORE_KEY    = 'kn-users-v3';
 const OVERRIDE_KEY = 'kn-users-overrides-v1';
-const DEFAULT_PW   = 'Kneuralabs@2026';
 
+// Single registry of every SSO-governed app: grid order, dashboard tiles and
+// admin grant toggles all read from here.
 const APPS = [
-  { id: 'portal',  name: 'Official Website' },
-  { id: 'beacon',  name: 'Beacon' },
-  { id: 'policy',  name: 'Handbook' },
-  { id: 'days',    name: 'KneuraDAYS' },
-  { id: 'sea',     name: 'SEA' },
-  { id: 'scope',   name: 'KneuraSCOPE' },
-  { id: 'lens',    name: 'KneuraLENS' },
-  { id: 'audit',   name: 'KneurAUDIT' },
-  { id: 'trax',    name: 'KneuraTRAX' },
-  { id: 'comm',    name: 'KneuraCOMM' },
-  { id: 'brand',   name: 'Brand' },
-  { id: 'price',   name: 'KneuraPRICE' },
-  { id: 'meet',    name: 'KneuraMEET' },
-  { id: 'vigil',   name: 'Vigil' },
-  { id: 'stratos', name: 'Stratos' },
-  { id: 'nimbus',  name: 'Nimbus' },
-  { id: 'pmo',     name: 'PMO' },
-  { id: 'hire',    name: 'Hire' },
-  { id: 'db',      name: 'PeopleBase' },
-  { id: 'design',  name: 'Design' },
-  { id: 'synapse', name: 'Synapse' },
-  { id: 'letterz', name: 'Letterz' },
-  { id: 'sentinel', name: 'Sentinel' },
+  { id: 'portal',  name: 'Official Website', href: 'https://www.kneuralabs.com',      seal: '🌐', accent: '#2563EB' },
+  { id: 'beacon',  name: 'Beacon',           href: 'https://beacon.kneuralabs.com',   seal: '📣', accent: '#DB2777' },
+  { id: 'policy',  name: 'Handbook',         href: 'https://policy.kneuralabs.com',   seal: '📖', accent: '#7C3AED' },
+  { id: 'days',    name: 'KneuraDAYS',       href: 'https://days.kneuralabs.com',     seal: '⏱️', accent: '#0891B2' },
+  { id: 'sea',     name: 'SEA',              href: 'https://sea.kneuralabs.com',      seal: '🛡️', accent: '#DC2626' },
+  { id: 'scope',   name: 'KneuraSCOPE',      href: 'https://scope.kneuralabs.com',    seal: '🎯', accent: '#EA580C' },
+  { id: 'lens',    name: 'KneuraLENS',       href: 'https://lens.kneuralabs.com',     seal: '🔍', accent: '#059669' },
+  { id: 'audit',   name: 'KneurAUDIT',       href: 'https://audit.kneuralabs.com',    seal: '🧾', accent: '#CA8A04' },
+  { id: 'trax',    name: 'KneuraTRAX',       href: 'https://trax.kneuralabs.com',     seal: '💰', accent: '#16A34A' },
+  { id: 'comm',    name: 'KneuraCOMM',       href: 'https://comm.kneuralabs.com',     seal: '📡', accent: '#4F46E5' },
+  { id: 'brand',   name: 'Brand',            href: 'https://brand.kneuralabs.com',    seal: '🎨', accent: '#E11D48' },
+  { id: 'price',   name: 'KneuraPRICE',      href: 'https://price.kneuralabs.com',    seal: '🏷️', accent: '#D97706' },
+  { id: 'meet',    name: 'KneuraMEET',       href: 'https://meet.kneuralabs.com',     seal: '🎥', accent: '#0D9488' },
+  { id: 'vigil',   name: 'Vigil',            href: 'https://vigil.kneuralabs.com',    seal: '📊', accent: '#9333EA' },
+  { id: 'stratos', name: 'Stratos',          href: 'https://stratos.kneuralabs.com',  seal: '🧭', accent: '#0EA5E9' },
+  { id: 'nimbus',  name: 'Nimbus',           href: 'https://nimbus.kneuralabs.com',   seal: '☁️', accent: '#64748B' },
+  { id: 'pmo',     name: 'PMO',              href: 'https://pmo.kneuralabs.com',      seal: '📋', accent: '#BE185D' },
+  { id: 'hire',    name: 'Hire',             href: 'https://hire.kneuralabs.com',     seal: '🤝', accent: '#65A30D' },
+  { id: 'db',      name: 'PeopleBase',       href: 'https://db.kneuralabs.com',       seal: '👥', accent: '#C026D3' },
+  { id: 'design',  name: 'Design',           href: 'https://design.kneuralabs.com',   seal: '✏️', accent: '#F59E0B' },
+  { id: 'synapse', name: 'Synapse',          href: 'https://synapse.kneuralabs.com',  seal: '🧠', accent: '#6366F1' },
+  { id: 'letterz', name: 'Letterz',          href: 'https://letterz.kneuralabs.com',  seal: '✉️', accent: '#6D28D9' },
+  { id: 'sentinel',name: 'Sentinel',         href: 'https://sentinel.kneuralabs.com', seal: '🛰️', accent: '#0F766E' },
 ];
+const APP_BY_ID = Object.fromEntries(APPS.map(a => [a.id, a]));
 
 const USERS = {
   'admin':       { password: '2d7e38d6f21338fad753eb282c54b74c05b48f017674074fce9f33de583d60d4', name: 'Administrator', role: 'admin'    },
@@ -1182,21 +1074,18 @@ async function _remoteGetAllApps() {
   } catch { return {}; }
 }
 
-// Upsert a user's granted app ids.
+// Upsert a user's granted app ids. Returns true on success so callers that
+// care (the admin grant toggles) can show granted vs failed states; fire-and-
+// forget callers can ignore the result.
 async function _remoteSetApps(empId, apps) {
   try {
-    await fetch(SB_URL + '/rest/v1/kn_app_access?on_conflict=employee_id', {
+    const r = await fetch(SB_URL + '/rest/v1/kn_app_access?on_conflict=employee_id', {
       method: 'POST',
       headers: { ..._sbHeaders, Prefer: 'resolution=merge-duplicates' },
       body: JSON.stringify({ employee_id: empId, apps, updated_at: new Date().toISOString() }),
     });
-  } catch {}
-}
-
-async function _remoteDeleteApps(empId) {
-  try {
-    await fetch(SB_URL + '/rest/v1/kn_app_access?employee_id=eq.' + encodeURIComponent(empId), { method: 'DELETE', headers: _sbHeaders });
-  } catch {}
+    return r.ok;
+  } catch { return false; }
 }
 
 // One-time migration: push any grants that exist only in this admin browser's
@@ -1235,7 +1124,6 @@ function _encodeAuth(payload) {
 }
 
 let currentID = '';
-let currentPw = '';
 
 const _params     = new URLSearchParams(window.location.search);
 const redirectUrl = _params.get('redirect') || _params.get('next') || _params.get('returnUrl') || _params.get('continue') || '';
@@ -1249,7 +1137,6 @@ _ssoChannel.onmessage = () => _closeThisTab();
   const theme = stored || ((h >= 6 && h < 18) ? 'light' : 'dark');
   document.documentElement.setAttribute('data-theme', theme);
   updateThemeMeta(theme);
-  requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.add('theme-ready')));
 })();
 
 function updateThemeMeta(t) {
@@ -1269,34 +1156,7 @@ function showScreen(id) {
   const el = document.getElementById(id);
   if (el) el.classList.add('active');
   clearErrors();
-  if (id === 's-admin') renderAdminAppGrid([]);
 }
-
-const _DASH_TOOLS = {
-  portal:  { name: 'Official Website', href: 'https://www.kneuralabs.com',        seal: '🌐', accent: '#2563EB' },
-  beacon:  { name: 'Beacon',           href: 'https://beacon.kneuralabs.com',     seal: '📣', accent: '#DB2777' },
-  policy:  { name: 'Handbook',         href: 'https://policy.kneuralabs.com',     seal: '📖', accent: '#7C3AED' },
-  days:    { name: 'KneuraDAYS',       href: 'https://days.kneuralabs.com',       seal: '⏱️', accent: '#0891B2' },
-  sea:     { name: 'SEA',              href: 'https://sea.kneuralabs.com',        seal: '🛡️', accent: '#DC2626' },
-  scope:   { name: 'KneuraSCOPE',      href: 'https://scope.kneuralabs.com',      seal: '🎯', accent: '#EA580C' },
-  lens:    { name: 'KneuraLENS',       href: 'https://lens.kneuralabs.com',       seal: '🔍', accent: '#059669' },
-  audit:   { name: 'KneurAUDIT',       href: 'https://audit.kneuralabs.com',      seal: '🧾', accent: '#CA8A04' },
-  trax:    { name: 'KneuraTRAX',       href: 'https://trax.kneuralabs.com',       seal: '💰', accent: '#16A34A' },
-  comm:    { name: 'KneuraCOMM',       href: 'https://comm.kneuralabs.com',       seal: '📡', accent: '#4F46E5' },
-  brand:   { name: 'Brand',            href: 'https://brand.kneuralabs.com',      seal: '🎨', accent: '#E11D48' },
-  price:   { name: 'KneuraPRICE',      href: 'https://price.kneuralabs.com',      seal: '🏷️', accent: '#D97706' },
-  meet:    { name: 'KneuraMEET',       href: 'https://meet.kneuralabs.com',       seal: '🎥', accent: '#0D9488' },
-  vigil:   { name: 'Vigil',            href: 'https://vigil.kneuralabs.com',      seal: '📊', accent: '#9333EA' },
-  stratos: { name: 'Stratos',          href: 'https://stratos.kneuralabs.com',    seal: '🧭', accent: '#0EA5E9' },
-  nimbus:  { name: 'Nimbus',           href: 'https://nimbus.kneuralabs.com',     seal: '☁️', accent: '#64748B' },
-  pmo:     { name: 'PMO',              href: 'https://pmo.kneuralabs.com',        seal: '📋', accent: '#BE185D' },
-  hire:    { name: 'Hire',             href: 'https://hire.kneuralabs.com',       seal: '🤝', accent: '#65A30D' },
-  db:      { name: 'PeopleBase',       href: 'https://db.kneuralabs.com',         seal: '👥', accent: '#C026D3' },
-  design:  { name: 'Design',           href: 'https://design.kneuralabs.com',     seal: '✏️', accent: '#F59E0B' },
-  synapse: { name: 'Synapse',          href: 'https://synapse.kneuralabs.com',    seal: '🧠', accent: '#6366F1' },
-  letterz: { name: 'Letterz',          href: 'https://letterz.kneuralabs.com',    seal: '✉️', accent: '#6D28D9' },
-  sentinel:{ name: 'Sentinel',         href: 'https://sentinel.kneuralabs.com',   seal: '🛰️', accent: '#0F766E' },
-};
 
 function renderDashApps(appIds) {
   const wrap = document.getElementById('dash-app-grid');
@@ -1307,9 +1167,9 @@ function renderDashApps(appIds) {
     return;
   }
   const tiles = appIds
-    .filter(id => _DASH_TOOLS[id])
+    .filter(id => APP_BY_ID[id])
     .map(id => {
-      const t = _DASH_TOOLS[id];
+      const t = APP_BY_ID[id];
       return `<a href="${t.href}" target="_blank" rel="noopener" style="display:flex;flex-direction:column;align-items:center;gap:5px;text-decoration:none;color:#9090b8;font-size:10px;font-weight:600;width:58px;transition:transform .2s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
         <span style="width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;background:${t.accent}22;border:1.5px solid ${t.accent}55">${t.seal}</span>
         <span style="text-align:center;line-height:1.3">${t.name}</span>
@@ -1326,20 +1186,10 @@ function renderDashApps(appIds) {
 // db.kneuralabs.com Pages host. Grants are stored per-user in the shared backend.
 const DIR_URL = 'https://raw.githubusercontent.com/kneuralabs/db/main/data/employees.json';
 
-// Upsert grants and report success so the UI can show green (granted) vs amber
-// (could not grant) — unlike _remoteSetApps which swallows the outcome.
-async function _remoteSetAppsOK(empId, apps) {
-  try {
-    const r = await fetch(SB_URL + '/rest/v1/kn_app_access?on_conflict=employee_id', {
-      method: 'POST',
-      headers: { ..._sbHeaders, Prefer: 'resolution=merge-duplicates' },
-      body: JSON.stringify({ employee_id: empId, apps, updated_at: new Date().toISOString() }),
-    });
-    return r.ok;
-  } catch { return false; }
-}
-
 let _dirEmps = [], _dirGrants = {}, _dirSel = '', _dirCur = new Set();
+// Directory JSON is fetched cross-origin and rendered with innerHTML — escape
+// every employee-sourced string so a poisoned record can't inject markup.
+const _esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const _userName   = e => ((e.first || '') + ' ' + (e.last || '')).trim() || e.name || e.id;
 const _userUname  = e => (e.email || '').split('@')[0] || ((e.first || '') + '.' + (e.last || '')).toLowerCase().replace(/\s+/g, '');
 const _userActive = e => (e.status || '').toLowerCase() === 'active';
@@ -1362,7 +1212,7 @@ async function loadDirectory() {
   _dirGrants = await _remoteGetAllApps();
   const prev = sel.value;
   sel.innerHTML = '<option value="">— Select an employee —</option>' + _dirEmps.map(e =>
-    `<option value="${e.id}">${_userUname(e)} — ${_userName(e)} — ${_userActive(e) ? 'Active' : 'Revoked'}</option>`
+    `<option value="${_esc(e.id)}">${_esc(_userUname(e))} — ${_esc(_userName(e))} — ${_userActive(e) ? 'Active' : 'Revoked'}</option>`
   ).join('');
   if (_dirEmps.some(e => e.id === prev)) { sel.value = prev; onDirUserSelect(); }
   else grid.innerHTML = '<div class="usr-empty">Select an employee to manage app access.</div>';
@@ -1377,10 +1227,10 @@ function onDirUserSelect() {
   const emp = _dirEmps.find(e => e.id === _dirSel);
   const active = emp ? _userActive(emp) : true;
   grid.innerHTML =
-    `<div class="usr-meta">${_userName(emp)} · ${_dirSel} · <strong style="color:${active ? '#16A34A' : '#D97706'}">${active ? 'Active' : 'Revoked'}</strong></div>` +
+    `<div class="usr-meta">${_esc(emp ? _userName(emp) : _dirSel)} · ${_esc(_dirSel)} · <strong style="color:${active ? '#16A34A' : '#D97706'}">${active ? 'Active' : 'Revoked'}</strong></div>` +
     `<div class="usr-grid">${APPS.map(a => {
       const on = _dirCur.has(a.id);
-      const seal = (_DASH_TOOLS[a.id] || {}).seal || a.name.charAt(0);
+      const seal = a.seal || a.name.charAt(0);
       return `<div class="usr-box${on ? ' on granted' : ''}" id="ub-${a.id}" onclick="toggleUserApp('${a.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleUserApp('${a.id}')}" role="switch" aria-checked="${on}" tabindex="0" aria-label="${a.name} access">
         <div class="usr-ico">${seal}</div>
         <div class="usr-nm">${a.name}</div>
@@ -1399,7 +1249,7 @@ async function toggleUserApp(appId) {
   if (!turningOn) { // revoke access
     _dirCur.delete(appId);
     box.className = 'usr-box'; box.setAttribute('aria-checked', 'false'); st.textContent = 'No access';
-    if (await _remoteSetAppsOK(_dirSel, [..._dirCur])) {
+    if (await _remoteSetApps(_dirSel, [..._dirCur])) {
       _dirGrants[_dirSel] = [..._dirCur]; showToast(appId + ' access revoked for ' + _dirSel, 'ok');
     } else {
       _dirCur.add(appId); box.className = 'usr-box on denied'; st.textContent = 'Save failed';
@@ -1410,7 +1260,7 @@ async function toggleUserApp(appId) {
   box.className = 'usr-box on checking'; box.setAttribute('aria-checked', 'true');
   st.innerHTML = '<span class="usr-spin"></span> Giving access…';
   _dirCur.add(appId);
-  if (await _remoteSetAppsOK(_dirSel, [..._dirCur])) {
+  if (await _remoteSetApps(_dirSel, [..._dirCur])) {
     box.className = 'usr-box on granted'; st.textContent = 'Granted';
     _dirGrants[_dirSel] = [..._dirCur];
     showToast(appId + ' access granted to ' + _dirSel + ' ✓', 'ok');
@@ -1419,51 +1269,6 @@ async function toggleUserApp(appId) {
     box.className = 'usr-box on denied'; st.textContent = 'Cannot grant';
     showToast('Could not grant ' + appId + ' access', 'err');
   }
-}
-
-function renderAdminAppGrid(checkedIds) {
-  const grid = document.getElementById('admin-app-grid');
-  if (!grid) return;
-  grid.innerHTML = APPS.map(a =>
-    `<label class="app-check-item">
-      <input type="checkbox" id="admin-app-${a.id}"${checkedIds.includes(a.id) ? ' checked' : ''}>
-      <span>${a.name}</span>
-    </label>`
-  ).join('');
-}
-
-function refreshAppGrid() {
-  const checked = APPS.filter(a => document.getElementById('admin-app-' + a.id)?.checked).map(a => a.id);
-  renderAdminAppGrid(checked);
-  showToast('App list refreshed ✓', 'ok');
-}
-
-function toggleAllApps(btn) {
-  const isOn = btn.classList.toggle('on');
-  btn.setAttribute('aria-pressed', isOn);
-  APPS.forEach(a => { const el = document.getElementById('admin-app-' + a.id); if (el) el.checked = isOn; });
-}
-
-function adminSelectAllApps() {
-  const btn = document.getElementById('app-select-toggle');
-  if (btn) { btn.classList.add('on'); btn.setAttribute('aria-pressed','true'); }
-  APPS.forEach(a => { const el = document.getElementById('admin-app-' + a.id); if (el) el.checked = true; });
-}
-
-function adminDeselectAllApps() {
-  const btn = document.getElementById('app-select-toggle');
-  if (btn) { btn.classList.remove('on'); btn.setAttribute('aria-pressed','false'); }
-  APPS.forEach(a => { const el = document.getElementById('admin-app-' + a.id); if (el) el.checked = false; });
-}
-
-function adminPrefillUser() {
-  const id = document.getElementById('admin-new-id').value.trim().toUpperCase();
-  if (!validEmpID(id)) return;
-  const users = _loadUsers();
-  const user  = users[id];
-  if (!user) return;
-  document.getElementById('admin-new-name').value = user.name || '';
-  renderAdminAppGrid(user.apps || []);
 }
 
 function clearErrors() {
@@ -1476,10 +1281,6 @@ function fmtID(el) {
     el.value = el.value.toLowerCase().replace(/[^a-z]/g, '');
   else
     el.value = el.value.toUpperCase().replace(/[^KN0-9\-]/g, '');
-}
-
-function fmtEmpID(el) {
-  el.value = el.value.toUpperCase().replace(/[^KN0-9\-]/g, '');
 }
 
 function validEmpID(v) { return /^KN-\d{4}-\d{3}$/.test(v); }
@@ -1518,7 +1319,6 @@ async function checkPW() {
     return;
   }
   errEl.classList.remove('show');
-  currentPw = pw;
   btn.disabled = false; btn.textContent = 'Sign in';
   // App grants live in the shared backend so they apply on any device. Fall
   // back to the local copy only when the backend is unreachable or has no
@@ -1538,7 +1338,9 @@ async function checkPW() {
     return;
   }
   if (redirectUrl) {
-    const _rDest = new URL(redirectUrl, location.href);
+    let _rDest;
+    try { _rDest = new URL(redirectUrl, location.href); }
+    catch { showToast('Sign-in destination is not authorised.', 'err'); return; }
     if (!_isTrustedOrigin(_rDest.origin)) { showToast('Sign-in destination is not authorised.', 'err'); return; }
     _rDest.searchParams.set('kn-auth', _encodeAuth(_authPayload));
     location.replace(_rDest.toString());
@@ -1574,7 +1376,6 @@ async function changePassword() {
   }
   user.password = await _sha256(newPw);
   _saveUsers(users);
-  currentPw = newPw;
   document.getElementById('dash-name').textContent = 'Welcome, ' + (user.name || currentID) + '.';
   document.getElementById('dash-id').textContent   = currentID;
   showScreen('s-dash');
@@ -1595,86 +1396,8 @@ async function changeSelfPassword() {
   }
   users[currentID].password = await _sha256(newPw);
   _saveUsers(users);
-  currentPw = newPw;
   showScreen('s-dash');
   showToast('Password updated ✓', 'ok');
-}
-
-async function refreshUserList() {
-  const users  = _loadUsers();
-  const remote = await _remoteGetAllApps();
-  for (const id of Object.keys(users))
-    if (id !== 'admin' && remote[id]) users[id].apps = remote[id];
-  const el    = document.getElementById('user-list');
-  const rows  = Object.entries(users).filter(([id]) => id !== 'admin');
-  if (!rows.length) { el.innerHTML = '<div style="font-size:.82rem;color:var(--text-muted)">No users yet.</div>'; return; }
-  el.innerHTML = rows.map(([id, u]) => {
-    const appCount = Array.isArray(u.apps) ? u.apps.length : 0;
-    const appLabel = appCount === 0 ? 'No apps' : appCount + ' app' + (appCount !== 1 ? 's' : '');
-    return `<div class="user-row" role="listitem">
-      <span style="display:flex;flex-direction:column;gap:2px">
-        <span>${id}</span>
-        <span style="font-size:.6875rem;color:var(--text-muted)">${u.name || '—'}</span>
-      </span>
-      <span style="display:flex;align-items:center;gap:.5rem">
-        <span class="app-count-badge" title="${appCount > 0 ? (u.apps || []).join(', ') : 'No application access'}" style="cursor:default">${appLabel}</span>
-        <button onclick="adminEditUser('${id}')" style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Edit user">✎</button>
-        <button onclick="adminReset('${id}')" style="background:none;border:none;cursor:pointer;color:var(--kn-slate);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Reset to default password">↺</button>
-        <button onclick="adminDelete('${id}')" style="background:none;border:none;cursor:pointer;color:var(--kn-red);font-size:.75rem;font-weight:600;font-family:var(--font);padding:2px 6px;border-radius:4px;line-height:1" title="Delete user">✕</button>
-      </span>
-    </div>`;
-  }).join('');
-}
-
-async function adminCreate() {
-  const id   = document.getElementById('admin-new-id').value.trim().toUpperCase();
-  const name = document.getElementById('admin-new-name').value.trim();
-  if (!validEmpID(id)) { showToast('Enter a valid Employee ID.', 'err'); return; }
-  const selectedApps = APPS.filter(a => document.getElementById('admin-app-' + a.id)?.checked).map(a => a.id);
-  const users = _loadUsers();
-  const existing = users[id];
-  users[id] = {
-    password: existing ? existing.password : await _sha256(DEFAULT_PW),
-    name: name || id,
-    role: 'employee',
-    apps: selectedApps,
-  };
-  _saveUsers(users);
-  await _remoteSetApps(id, selectedApps);
-  document.getElementById('admin-new-id').value   = '';
-  document.getElementById('admin-new-name').value = '';
-  adminDeselectAllApps();
-  refreshUserList();
-  showToast('User saved ✓', 'ok');
-}
-
-async function adminDelete(empId) {
-  const users = _loadUsers();
-  delete users[empId];
-  _saveUsers(users);
-  await _remoteDeleteApps(empId);
-  refreshUserList();
-  showToast('Deleted ' + empId + ' ✓', 'ok');
-}
-
-async function adminEditUser(empId) {
-  const users = _loadUsers();
-  const user  = users[empId];
-  if (!user) return;
-  document.getElementById('admin-new-id').value   = empId;
-  document.getElementById('admin-new-name').value = user.name || '';
-  const remote = await _remoteGetApps(empId);
-  renderAdminAppGrid(remote || user.apps || []);
-  document.getElementById('admin-new-id').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  document.getElementById('admin-new-name').focus();
-}
-
-async function adminReset(empId) {
-  const users = _loadUsers();
-  if (!users[empId]) { showToast('User not found.', 'err'); return; }
-  users[empId].password = await _sha256(DEFAULT_PW);
-  _saveUsers(users);
-  showToast('Password reset to default for ' + empId + ' ✓', 'ok');
 }
 
 function doClose() {
@@ -1728,9 +1451,6 @@ function applyStrength(v, fillId, labelId) {
   label.textContent     = labels[Math.max(s - 1, 0)];
   label.style.color     = colors[Math.max(s - 1, 0)];
 }
-
-function checkStrength(v)  { applyStrength(v, 'str-fill',  'str-label'); }
-function checkStrength2(v) { applyStrength(v, 'str-fill2', 'str-label2'); }
 
 let toastTimer;
 function showToast(msg, type) {
